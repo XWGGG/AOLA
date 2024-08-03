@@ -17,14 +17,14 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							谋攻篇: {
-								谋攻篇: ["mou_zhaoyun", "mou_huangzhong", "kaltsit", "mou_machao", "mou_huaxiong", "mou_xuhuang", "mou_sunshangxiang", "mou_sunquan", "mou_lvmeng", "mou_yujin", "mou_zhangfei"],
+								谋攻篇: ["wumianzhiwang", "mou_huangzhong", "kaltsit", "mou_machao", "mou_huaxiong", "mou_xuhuang", "mou_sunshangxiang", "mou_sunquan", "mou_lvmeng", "mou_yujin", "mou_zhangfei"],
 								其他: []
 							}
 						},
 						character: {
-							"mou_zhaoyun": ["male", "shu", 4, ["moulongdan", "moujizhu"], ["die_audio"]],
+							"wumianzhiwang": ["male", "shu", 3, ["qian", "lvlicaijue"], ["die_audio"]],
 							"mou_huangzhong": ["male", "shu", 4, ["mouliegong"], ["die_audio"]],
-							"kaltsit": ["female", "qun", 3, ["mon3ter", "buhui"], ["die_audio"]],
+							"kaltsit": ["female", "qun", 4, ["mon3ter", "buhui"], ["die_audio"]],
 							"mou_machao": ["male", "shu", 4, ["mashu", "moutieqi"], ["die_audio"]],
 							"mou_huaxiong": ["male", "qun", "4/4/5", ["mouyaowu", "mouyangwei"], ["die_audio"]],
 							"mou_xuhuang": ["male", "wei", 4, ["mouduanliang", "shipo"], ["die_audio"]],
@@ -35,7 +35,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"mou_zhangfei": ["male", "shu", 4, ["mou_paoxiao", "newxieji"], ["die_audio"]]
 						},
 						translate: {
-							"mou_zhaoyun": "谋赵云",
+							"wumianzhiwang": "无冕之王",
 							"kaltsit": "凯尔希",
 							"mou_huangzhong": "谋黄忠",
 							"mou_machao": "谋马超",
@@ -46,12 +46,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"mou_lvmeng": "谋吕蒙",
 							"mou_yujin": "谋于禁",
 							"mou_zhangfei": "谋张飞",
-							moulongdan: "龙胆",
-							"moulongdan_info": "本局游戏限一次，你可以将一张【杀】当【闪】或【闪】当【杀】使用或打出，并摸一张牌。一名角色的回合结束后，“龙胆”使用次数+1且最大为3。",
-							"moulongdan_gai": "龙胆·改",
-							"moulongdan_gai_info": "本局游戏限一次，你可以将一张基本牌当任意基本牌使用或打出，并摸一张牌。一名角色的回合结束后，“龙胆”使用次数+1且最大为3。",
-							moujizhu: "积著",
-							"moujizhu_info": "准备阶段，你可以选择一名角色，与其进行“协力”。其结束阶段，若你于其“协力”成功，则直到你的下个结束阶段，你将“龙胆”中的“【杀】当【闪】或【闪】当【杀】”改为“基本牌当任意基本牌”。",
+							qian: "qian",
+							"qian_info": "每次即将受到伤害时，判定一次，若不为黑桃，则此次伤害降至0。",
+							lvlicaijue: "律理裁决",
+							"lvlicaijue_info": "自身每次对攻击目标造成伤害后，令其下一回合跳过摸牌和出牌阶段。",
 							mon3ter: "怪物3",
 							"mon3ter_info": "出牌阶段，你可以选择3张黑色手牌，将其全部弃掉，并令一名其他角色直接失去2点体力，同时自己摸1张牌。",
 							buhui: "不毁",
@@ -123,17 +121,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							moufanxiang: "返乡",
 							"moufanxiang_info": "使命技，你的登场势力为“蜀”。游戏开始时，你选择一名角色令其获得“助”。出牌阶段开始时，有“助”的角色须选择一项：1. 若其有手牌，交给你两张手牌（若其手牌不足两张则交给你所有手牌）；2. 令你使命失败。失败：你将势力修改为“吴”、回复1点体力并获得你武将牌上所有“妆”牌，弃掉场上的“助”，减1点体力上限。",
 							"mou_zhuang": "妆",
-							"mou_zhuang_info": "",
-							"mou_zhu": "助",
-							"mou_zhu_info": "",
 							mouxiaoji: "枭姬",
 							"mouxiaoji_info": "吴势力技，当你失去装备区里的一张牌时，你摸两张牌，然后可以弃置场上一张牌。",
-							"moutongye_bian": "",
-							"moutongye_bian_info": "",
-							"mon3ter_init": "怪物3",
-							"mon3ter_init_info": "",
-							"mouliegong5": "烈弓",
-							"mouliegong5_info": ""
+
 						},
 						skill: {
 							_dieAudioMOU: {
@@ -146,387 +136,48 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (trigger.player.name) game.playAudio('..', 'extension', '谋攻篇', trigger.player.name);
 								}
 							},
-							moulongdan_gai: {
-								enable: ["chooseToUse", "chooseToRespond"],
-								onremove: function (player, skill) {
-									player.storage.moulongdan_gai = false;
-								},
-								hiddenCard: function (player, name) {
-									if (!['sha', 'shan', 'tao', 'jiu'].contains(name)) return false;
-									return player.hasCard(function (card) {
-										return get.type(card) == 'basic';
-									}, 'hs');
-								},
-								filter: function (event, player) {
-									if (!player.storage.moulongdan_gai) return false;
-									if (player.countMark('moulongdan') <= 0) return false;
-									if (event.filterCard({ name: 'sha' }, player, event) ||
-										event.filterCard({ name: 'shan' }, player, event) ||
-										event.filterCard({ name: 'jiu' }, player, event) ||
-										event.filterCard({ name: 'tao' }, player, event)) {
-										return player.hasCard(function (card) {
-											return get.type(card) == 'basic';
-										}, 'hs');
-									}
-									return false;
-								},
-								chooseButton: {
-									dialog: function (event, player) {
-										var list = [];
-										if (event.filterCard({ name: 'sha' }, player, event)) {
-											list.push(['基本', '', 'sha']);
-											for (var j of lib.inpile_nature) list.push(['基本', '', 'sha', j]);
-										}
-										if (event.filterCard({ name: 'shan' }, player, event)) {
-											list.push(['基本', '', 'shan']);
-										}
-										if (event.filterCard({ name: 'tao' }, player, event)) {
-											list.push(['基本', '', 'tao']);
-										}
-										if (event.filterCard({ name: 'jiu' }, player, event)) {
-											list.push(['基本', '', 'jiu']);
-										}
-										return ui.create.dialog('龙胆', [list, 'vcard'], 'hidden');
-									},
-									check: function (button) {
-										var player = _status.event.player;
-										var card = { name: button.link[2], nature: button.link[3] };
-										if (_status.event.getParent().type != 'phase' || game.hasPlayer(function (current) {
-											return player.canUse(card, current) && get.effect(current, card, player, player) > 0;
-										})) {
-											switch (button.link[2]) {
-												case 'tao': case 'shan': return 5;
-												case 'jiu': {
-													return 3;
-												};
-												case 'sha':
-													if (button.link[3] == 'fire') return 2.95;
-													else if (button.link[3] == 'thunder' || button.link[3] == 'ice') return 2.92;
-													else return 2.9;
-											}
-										}
-										return 0;
-									},
-									backup: function (links, player) {
-										return {
-											audio: 'moulongdan',
-											filterCard: function (card, player, target) {
-												if (player.storage.moulongdan_gai) return get.type(card) == 'basic';
-												else if (ui.selected.cards.length) {
-													if (get.type(ui.selected.cards[0]) == 'basic') return true;
-													return get.type(card) == 'basic';
-												}
-												return true;
-											},
-											complexCard: true,
-											selectCard: 1,
-											check: function (card, player, target) {
-												if (!ui.selected.cards.length && get.type(card) == 'basic') return 6;
-												else return 6 - get.value(card);
-											},
-											viewAs: { name: links[0][2], nature: links[0][3] },
-											position: 'hes',
-											popname: true,
-										}
-									},
-									prompt: function (links, player) {
-										var str = '一张基本牌';
-										return '将' + str + '当做' + get.translation(links[0][3] || '') + get.translation(links[0][2]) + '使用或打出';
-									},
-								},
-								ai: {
-									order: function () {
-										var player = _status.event.player;
-										var event = _status.event;
-										if (event.filterCard({ name: 'jiu' }, player, event) && get.effect(player, { name: 'jiu' }) > 0) {
-											return 3.3;
-										}
-										return 3.1;
-									},
-									skillTagFilter: function (player, tag, arg) {
-										if (tag == 'fireAttack') return true;
-										if (!player.hasCard(function (card) {
-											return get.type(card) == 'basic';
-										}, 'hes')) {
-											return false;
-										}
-									},
-									result: {
-										player: 1,
-									},
-									respondSha: true,
-									respondShan: true,
-									fireAttack: true,
-								},
-								sub: true,
-							},
-							moulongdan: {
-								mark: true,
-								direct: true,
-								audio: "ext:谋攻篇:2",
-								trigger: {
-									global: "phaseEnd",
-								},
-								marktext: "胆",
-								intro: {
-									name: "龙胆",
-									content: "mark",
-								},
-								init: function (player) {
-									player.storage.moulongdan = 1;
-									player.storage.moulongdan_gai = false;
-								},
-								filter: function (event, player) {
-									return player.countMark('moulongdan') < 3;
-								},
-								content: function () {
-									player.addMark('moulongdan', 1);
-								},
-								group: ["moulongdan_draw", "moulongdan_use"],
-								subSkill: {
-									use: {
-										enable: ["chooseToUse", "chooseToRespond"],
-										position: "hs",
-										hiddenCard: function (player, name) {
-											if (name == 'sha') return player.countCards('hs', 'shan') > 0;
-											if (name == 'shan') return player.countCards('hs', 'sha') > 0;
-											return false;
-										},
-										mod: {
-											aiValue: function (player, card, num) {
-												if (card.name != 'sha' && card.name != 'shan') return;
-												var geti = function () {
-													var cards = player.getCards('hs', function (card) {
-														return card.name == 'sha' || card.name == 'shan';
-													});
-													if (cards.contains(card)) {
-														return cards.indexOf(card);
-													}
-													return cards.length;
-												};
-												return Math.max(num, [7, 5, 5, 3][Math.min(geti(), 3)]);
-											},
-											aiUseful: function () {
-												return lib.skill.moulongdan_use.mod.aiValue.apply(this, arguments);
-											},
-										},
-										locked: false,
-										audio: "moulongdan",
-
-										prompt: "【杀】当【闪】或【闪】当【杀】使用或打出，并摸一张牌",
-										viewAs: function (cards, player) {
-											var name = false;
-											switch (get.name(cards[0], player)) {
-												case 'sha': name = 'shan'; break;
-												case 'shan': name = 'sha'; break;
-											}
-											if (name) return { name: name };
-											return null;
-										},
-										check: function (card) {
-											var player = _status.event.player;
-											if (_status.event.type == 'phase') {
-												var max = 0;
-												var name2;
-												var list = ['sha'];
-												var map = { sha: 'shan' }
-												for (var i = 0; i < list.length; i++) {
-													var name = list[i];
-													if (player.countCards('hs', map[name]) > (name == 'jiu' ? 1 : 0) && player.getUseValue({ name: name }) > 0) {
-														var temp = get.order({ name: name });
-														if (temp > max) {
-															max = temp;
-															name2 = map[name];
-														}
-													}
-												}
-												if (name2 == get.name(card, player)) return 1;
-												return 0;
-											}
-											return 1;
-										},
-										filterCard: function (card, player, event) {
-											event = event || _status.event;
-											var filter = event._backup.filterCard;
-											var name = get.name(card, player);
-											if (name == 'sha' && filter({ name: 'shan', cards: [card] }, player, event)) return true;
-											if (name == 'shan' && filter({ name: 'sha', cards: [card] }, player, event)) return true;
-											return false;
-										},
-										filter: function (event, player) {
-											var filter = event.filterCard;
-											if (player.storage.moulongdan <= 0) return false;
-											if (filter({ name: 'sha' }, player, event) && player.countCards('hs', 'shan')) return true;
-											if (filter({ name: 'shan' }, player, event) && player.countCards('hs', 'sha')) return true;
-											// if(filter({name:'tao'},player,event)&&player.countCards('hs','jiu')) return true;
-											// if(filter({name:'jiu'},player,event)&&player.countCards('hs','tao')) return true;
-											return false;
-										},
-										ai: {
-											respondSha: true,
-											respondShan: true,
-											skillTagFilter: function (player, tag) {
-												var name;
-												switch (tag) {
-													case 'respondSha': name = 'shan'; break;
-													case 'respondShan': name = 'sha'; break;
-												}
-												if (!player.countCards('hs', name)) return false;
-											},
-											order: function (item, player) {
-												if (player && _status.event.type == 'phase') {
-													var max = 0;
-													var list = ['sha'];
-													var map = { sha: 'shan' }
-													for (var i = 0; i < list.length; i++) {
-														var name = list[i];
-														if (player.countCards('hs', map[name]) > (name == 'jiu' ? 1 : 0) && player.getUseValue({ name: name }) > 0) {
-															var temp = get.order({ name: name });
-															if (temp > max) max = temp;
-														}
-													}
-													if (max > 0) max += 0.3;
-													return max;
-												}
-												return 4;
-											},
-										},
-										sub: true,
-									},
-									draw: {
-										audio: "ext:谋攻篇:moulongdan",
-										trigger: {
-											player: ["useCard", "respond"],
-										},
-										forced: true,
-										popup: false,
-										filter: function (event, player) {
-											return event.skill == 'moulongdan_use' || event.skill == 'moulongdan_gai_backup';
-										},
-										content: function () {
-											player.removeMark('moulongdan', 1);
-											player.draw();
-										},
-										sub: true,
-									},
-
-								},
-							},
-							moujizhu: {
-								audio: "ext:谋攻篇:2",
-								trigger: {
-									player: "phaseZhunbeiBegin",
-								},
-								direct: true,
-								derivation: "moulongdan_gai",
-								content: function () {
+							qian: {
+								trigger: { player: "damageBegin" },
+								forced: true,  // 强制触发
+								content: function() {
 									'step 0'
-									player.chooseTarget(get.prompt('moujizhu'), '与一名其他角色协同作战', lib.filter.notMe).set('ai', function (target) {
-										var player = _status.event.player;
-										return get.attitude(player, target);
+									player.judge(function(card) {
+										if (get.suit(card) == 'spade') return -1;
+										return 1;
 									});
 									'step 1'
-									if (result.bool) {
-										event.target = result.targets[0];
-										player.chooseButton([get.prompt('moujizhu'), [['xieli_tongchou', 'xieli_bingjin', 'xieli_shucai', 'xieli_luli'], 'vcard']]);
+									if (result.bool == true) {
+										trigger.num = 0;
 									}
-									'step 2'
-									if (result.bool) {
-										player.logSkill('moujizhu', event.target);
-										var target = event.target;
-										var name = result.links[0][2];
-
-										if (!player.storage[name]) player.storage[name] = [];
-										if (['xieli_tongchou', 'xieli_bingjin'].contains(name)) {
-											var info = { player: target, skill: 'moujizhu', data: 0, bool: false };
-										} else {
-											var info = { player: target, skill: 'moujizhu', data: [], bool: false };
-										}
-										player.storage[name].push(info);
-										player.addTempSkill(name, { player: 'phaseBefore' });
-										if (!player.storage.xieli) player.storage.xieli = [];
-										if (!player.storage.xieli.contains(target)) player.storage.xieli.push(target);
-										player.addTempSkill('xieli', { player: 'phaseBefore' });
-
-										// if (!target.storage[name]) target.storage[name] = {};
-										// if (!player.storage[name]) player.storage[name] = {};
-										// if (['xieli_tongchou', 'xieli_bingjin'].contains(name)) {
-										//     target.storage[name][player.playerid] = { data: [0], bool: false };
-										//     player.storage[name][target.playerid] = { data: [0], bool: false };
-										// }
-										// else {
-										//     target.storage[name][player.playerid] = { data: [], bool: false };
-										//     player.storage[name][target.playerid] = { data: [], bool: false };
-										// }
-
-										// if (!player.storage.xieli) player.storage.xieli = [];
-										// if (!player.storage.xieli.contains(name)) player.storage.xieli.push(name);
-										// player.addTempSkill('xieli', { player: 'phaseBefore' });
-										// player.addTempSkill(name, { player: 'phaseBefore' });
-										// target.addTempSkill(name, { player: 'phaseAfter' });
-									}
-								},
-								group: ["moujizhu_hezuo"],
-								subSkill: {
-									hezuo: {
-										audio: "moujizhu",
-										trigger: {
-											player: "xieli_achieve",
-										},
-										forced: true,
-										filter: function (event, player) {
-											return player.storage.xieli.contains('moujizhu');
-										},
-										content: function () {
-											'step 0'
-											player.storage.xieli.splice(player.storage.xieli.indexOf('moujizhu'), 1);
-											player.storage.moulongdan_gai = true;
-											var info = get.info('moulongdan');
-											if (info.group.contains('moulongdan_use')) info.group = ['moulongdan_draw'];
-											player.addSkill('moujizhu_clear');
-											// player.addTempSkill('moujizhu_clear', { player: 'phaseAfter' });
-											player.addSkillLog('moulongdan_gai');
-											player.storage.moulongdan_clear = true;
-											game.delayx();
-										},
-										sub: true,
-									},
-									clear: {
-										charlotte: true,
-										forced: true,
-										mark: true,
-										marktext: "龙胆·改",
-										locked: true,
-										trigger: { player: ['phaseEnd', 'phaseZhunbeiBegin'] },
-										init: function (player) {
-											player.storage.moulongdan_clear = false;
-										},
-										filter: function (event, player) {
-											game.log(event.name);
-											game.log(player.storage.moulongdan_clear);
-											if (player.storage.moulongdan_clear) {
-												if (event.name == 'phaseZhunbei') player.storage.moulongdan_clear = false;
-												if (event.name == 'phase') return false
-											}
-											return true;
-										},
-										content: function () {
-											player.removeSkill('moujizhu_clear');
-										},
-										intro: {
-											content: "你可以将一张基本牌当任意基本牌使用或打出，并摸一张牌",
-										},
-										onremove: function (player, skill) {
-											player.storage.moulongdan_gai = false;
-											player.removeSkill('moulongdan_gai');
-											var info = get.info('moulongdan');
-											info.group = ['moulongdan_draw', 'moulongdan_use'];
-										},
-										sub: true,
-									},
 								},
 							},
-
+							
+							lvlicaijue: {
+                                trigger: { source: "damageEnd" },
+                                filter: function(event, player) {
+                                    return event.player != player;  
+                                },
+                                direct: true,
+                                content: function() {
+                                    trigger.player.addSkill("lvlicaijue_temp");
+                                },
+                                subSkill: {
+                                    temp: {
+                                        trigger: { player: "phaseBegin" },
+                                        silent: true,
+                                        content: function() {
+                                            player.skip("phaseDraw");
+                                            player.skip("phaseUse");
+                                            player.removeSkill("lvlicaijue_temp");
+                                        },
+                                        sub: true,
+                                        forced: true,
+                                        popup: false,
+                                        _priority: 1
+                                    }
+                                },
+                                _priority: 0
+                            },
 							newxieji: {
 								audio: "ext:谋攻篇:2",
 								trigger: {
