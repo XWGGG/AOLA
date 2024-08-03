@@ -1,9 +1,9 @@
 game.import("extension", function (lib, game, ui, get, ai, _status) {
 	return {
 		name: "谋攻篇", content: function (config, pack) {
-			lib.rank.rarity.legend.push("mou_huangzhong");
+			lib.rank.rarity.legend.push("liliangwang");
 			lib.rank.rarity.legend.push("kaltsit");
-			lib.rank.rarity.legend.push("ck_caomao");
+			lib.rank.rarity.legend.push("xihe");
 			lib.rank.rarity.legend.push("diy_huangwudie");
 			lib.rank.rarity.rare.push("mou_sunquan");
 			lib.rank.rarity.rare.push("mou_huaxiong");
@@ -17,15 +17,15 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							谋攻篇: {
-								谋攻篇: ["wumianzhiwang", "mou_huangzhong", "kaltsit", "mou_machao", "mou_huaxiong", "mou_xuhuang", "mou_sunshangxiang", "mou_sunquan", "mou_lvmeng", "mou_yujin", "mou_zhangfei"],
+								谋攻篇: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "mou_huaxiong", "mou_xuhuang", "mou_sunshangxiang", "mou_sunquan", "mou_lvmeng", "mou_yujin", "mou_zhangfei"],
 								其他: []
 							}
 						},
 						character: {
 							"wumianzhiwang": ["male", "shu", 3, ["qian", "lvlicaijue"], ["die_audio"]],
-							"mou_huangzhong": ["male", "shu", 4, ["mouliegong"], ["die_audio"]],
+							"liliangwang": ["male", "shu", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
 							"kaltsit": ["female", "qun", 4, ["mon3ter", "buhui"], ["die_audio"]],
-							"mou_machao": ["male", "shu", 4, ["mashu", "moutieqi"], ["die_audio"]],
+							"xihe": ["female", "shu", 4, ["shiguang", "lis"], ["die_audio"]],
 							"mou_huaxiong": ["male", "qun", "4/4/5", ["mouyaowu", "mouyangwei"], ["die_audio"]],
 							"mou_xuhuang": ["male", "wei", 4, ["mouduanliang", "shipo"], ["die_audio"]],
 							"mou_sunshangxiang": ["female", "shu", 4, ["mouliangzhu", "moufanxiang", "mouxiaoji"], ["doublegroup:shu:wu", "die_audio"]],
@@ -37,8 +37,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						translate: {
 							"wumianzhiwang": "无冕之王",
 							"kaltsit": "凯尔希",
-							"mou_huangzhong": "谋黄忠",
-							"mou_machao": "谋马超",
+							"liliangwang": "力量王",
+							"xihe": "羲和",
 							"mou_huaxiong": "谋华雄",
 							"mou_xuhuang": "谋徐晃",
 							"mou_sunshangxiang": "谋孙尚香",
@@ -57,33 +57,23 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							mouzhiheng: "制衡",
 							"mouzhiheng_info": "出牌阶段限一次，你可以弃置任意张牌，然后摸等量的牌，若你弃置了所有手牌，则额外摸X十1张牌（X为你拥有的“业”标记数量），然后移除一个“业”。",
 							moutongye: "统业",
-							"moutongye2": "统业",
-							"moutongye3": "统业",
 							"moutongye_info": "锁定技，结束阶段，你须选择一项，直到下回合准备阶段：1. 若场上的装备数变化，则你获得一个“业”，否则失去一个“业”；2. 若场上的装备数不变，则你获得一个“业”，否则失去一个“业”。你最多拥有2个“业”。",
 							moujiuyuan: "救援",
 							"moujiuyuan_info": "主公技，锁定技，①当其他吴势力角色使用【桃】时，你摸一张牌；②当其他吴势力角色对你使用【桃】时，此牌对你的回复值+1。",
-							mouliegong: "烈弓",
-							"mouliegong_info": "你使用【杀】可选择在此【杀】点数距离内的角色为目标。你使用牌时或成为其他角色使用牌的目标后，若此牌的花色未被“烈弓”记录，则记录此花色。当你使用【杀】指定唯一目标后，你可以展示牌堆顶的X张牌（X为你记录的花色数-1，且至少为0），每有一张牌花色与“烈弓”记录的花色相同，你令此【杀】伤害+1，且其不能使用“烈弓”记录花色的牌响应此【杀】。若如此做，此【杀】结算结束后，清除“烈弓”记录的花色。",
-							"mouliegong3": "烈弓",
-							"mouliegong3_info": "",
-							moutieqi: "铁骑",
-							"moutieqi_info": "当你使用【杀】指定一名角色为目标后，你可以令该角色的非锁定技失效直到回合结束且其不能使用【闪】抵消此【杀】，然后你与该角色进行“谋弈”：<br>直取敌营：你获得其一张牌。<br>扰阵疲敌：你摸两张牌。",
+							lilianghuiyao: "力量辉耀",
+							"lilianghuiyao_info": "回合开始时，若自身当前体力值不超过体力上限的一半，则判定一次，黑色体力上限+2，红色体力值+2。",
+							wujianchaoying: "无间超影",
+							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择立刻消耗一半的体力值，令自身两回合内造成的伤害翻倍。",
+							lis: "离时",
+							"lis_info": "上场立刻触发：所有角色每次回合开始时，增加1个离时标记，若标记数量达到或超过12个，清空标记。羲和清空标记时增加体力上限并回满体力值，其他角色则直接死亡。",
+							shiguang: "时光",
+							"shiguang_info": "场上每当有人受伤后，判定一次，若为黑桃，受伤者离时标记+6，否则离时标记+1。",
 							mouduanliang: "断粮",
 							"mouduanliang_info": "出牌阶段限两次，你可以与一名其他角色进行“谋弈”：<br>围城断粮：若其判定区有【兵粮寸断】，获得其一张牌，否则你将一张牌堆顶的牌当做【兵粮寸断】对其使用且无距离限制。<br>擂鼓进军：你视为对其使用一张【决斗】。",
 							shipo: "势迫",
 							"shipo_info": "结束阶段，你可以令一名体力值小于你的角色或所有判定区中有【兵粮寸断】的其他角色选择一项：1.交给你一张手牌；2.受到1点伤害。若你以此法获得了牌，你可以将其中任意张牌交给一名其他角色。",
 							mouyangwei: "扬威",
 							"mouyangwei_info": "出牌阶段限一次，你可以摸两张牌并获得“威”标记直到此阶段结束，然后此技能失效直到下个回合的结束阶段。拥有“威”标记的角色出牌阶段可额外使用一张【杀】、使用【杀】无距离限制且无视防具。",
-							"mouyangwei2": "扬威",
-							"mouyangwei2_info": "",
-							"mouyangwei3": "扬威",
-							"mouyangwei3_info": "",
-							"mouyangwei_sha": "扬威",
-							"mouyangwei_sha_info": "",
-							"mouliegong2": "烈弓",
-							"mouliegong2_info": "",
-							"mouliegong4": "烈弓",
-							"mouliegong4_info": "",
 							mouyaowu: "耀武",
 							"mouyaowu_info": "锁定技，当你受到牌造成的伤害时，若此牌为红色，则伤害来源摸一张牌；否则你摸一张牌。",
 							mouxiayuan: "挟援",
@@ -97,15 +87,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"moudujiang_info": "觉醒技，准备阶段，若你的护甲值不小于三，你获得技能〖夺荆〗。",
 							mouduojing: "夺荆",
 							"mouduojing_info": "当你使用【杀】指定目标后，你可以失去一点护甲，令此杀不计入次数限制并无视其防具，然后你获得其一张牌。",
-							"moukeji1": "克己",
-							"moukeji1_info": "",
-							"moukeji0": "克己",
-							"moukeji0_info": "",
-							"moujiuyuan2": "救援",
-							"moujiuyuan2_info": "",
-							"moutongye2_info": "",
-							"mouyangwei4": "扬威",
-							"mouyangwei4_info": "",
 							moupaoxiao: "咆哮",
 							"moupaoxiao_info": "锁定技，你使用【杀】无次数限制。若你装备了武器，你使用【杀】无距离限制。你的出牌阶段，若你于当前阶段内使用过【杀】，你于此阶段使用【杀】指定的目标本回合非锁定技失效，且此【杀】不可被响应且伤害值+1，此【杀】造成伤害后若目标角色未死亡，你失去1点体力并随机弃置一张手牌。",
 							mouxieji: "协击",
@@ -114,8 +95,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"newxieji_info": "准备阶段，你可以选择一名其他角色，与其进行“协力”。其结束阶段，若你与其“协力”成功，则你可以选择至多三名角色，依次视为对其使用一张【杀】，你用此【杀】造成伤害后，摸等同于此【杀】造成伤害数的牌。",
 							"mou_paoxiao": "咆哮",
 							"mou_paoxiao_info": "锁定技，你使用【杀】无次数限制。若你装备了武器，你使用【杀】无距离限制。你的出牌阶段，若你于当前阶段内使用过【杀】，你于此阶段使用【杀】指定的目标本回合非锁定技失效，且此【杀】不可被响应且伤害值+1，此【杀】造成伤害后若目标角色未死亡，你失去1点体力并随机弃置一张手牌。",
-							"mou_paoxiao2": "咆哮",
-							"mou_paoxiao2_info": "",
 							mouliangzhu: "良助",
 							"mouliangzhu_info": "蜀势力技，出牌阶段限一次，你可以获得其他角色装备区的一张牌，将其置于你的武将牌上，称为“妆”，然后令拥有“助”的角色选择一项：1. 回复1点体力值；2. 摸一张牌。",
 							moufanxiang: "返乡",
@@ -136,22 +115,68 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (trigger.player.name) game.playAudio('..', 'extension', '谋攻篇', trigger.player.name);
 								}
 							},
-							qian: {
-								trigger: { player: "damageBegin" },
-								forced: true,  // 强制触发
+							lis: {
+								trigger: { global: "phaseBefore" },
+								forced: true,
 								content: function() {
-									'step 0'
-									player.judge(function(card) {
-										if (get.suit(card) == 'spade') return -1;
-										return 1;
-									});
-									'step 1'
-									if (result.bool == true) {
-										trigger.num = 0;
+									var current = trigger.player; // 当前回合角色
+									current.addMark('lis', 1);
+									current.popup('离时 +1 (' + current.countMark('lis') + ')');
+									game.log(current, '获得了1个离时标记，当前离时标记数量：', current.countMark('lis'));
+							
+									if (current.countMark('lis') >= 12) {
+										current.removeMark('lis', current.countMark('lis'));
+										current.popup('离时标记清空');
+										game.log(current, '的离时标记被清空');
+							
+										if (current == player) { // 如果当前回合角色是技能拥有者
+											current.gainMaxHp();
+											current.recover(current.maxHp - current.hp);
+											current.popup('体力上限+1，体力值回满');
+											game.log(current, '增加了1点体力上限并回满了体力值');
+										} else {
+											current.die();
+											game.log(current, '因离时标记死亡');
+										}
 									}
 								},
+								mark: true,
+								intro: {
+									content: function(storage, player) {
+										return '当前离时标记数量：' + player.countMark('lis');
+									}
+								},
+								_priority: 0
 							},
 							
+							shiguang: {
+								trigger: { global: "damageEnd" },
+								forced: true,
+								content: function() {
+									'step 0'
+									trigger.player.judge(function(card) {
+										return get.suit(card) == 'spade' ? 2 : -2;
+									});
+									'step 1'
+									if (result.judge == 2) {
+										trigger.player.addMark('lis', 6);
+										trigger.player.popup('离时 +6 (' + trigger.player.countMark('lis') + ')');
+										game.log(trigger.player, '获得了6个离时标记，当前离时标记数量：', trigger.player.countMark('lis'));
+									} else {
+										trigger.player.addMark('lis', 1);
+										trigger.player.popup('离时 +1 (' + trigger.player.countMark('lis') + ')');
+										game.log(trigger.player, '获得了1个离时标记，当前离时标记数量：', trigger.player.countMark('lis'));
+									}
+								},
+								mark: true,
+								intro: {
+									content: function(storage, player) {
+										return '当前离时标记数量：' + player.countMark('lis');
+									}
+								},
+								_priority: 0
+							},
+													
 							lvlicaijue: {
                                 trigger: { source: "damageEnd" },
                                 filter: function(event, player) {
@@ -804,231 +829,53 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									player.draw();
 								},
 							},
-							mouliegong: {
-								audio: "ext:谋攻篇:2",
-								marktext: "烈",
-								intro: {
-									content: function (storage) {
-										var str = '记录花色：';
-										str += get.translation(storage);
-										return str;
-									},
-								},
-								group: ["mouliegong2", "mouliegong4", "mouliegong5"],
-								onremove: true,
-								shaRelated: true,
-								mod: {
-									targetInRange: function (card, player, target) {
-										if (card.name == 'sha' && typeof get.number(card) == 'number') {
-											if (get.distance(player, target) <= get.number(card)) return true;
-										}
-									},
-								},
-								trigger: {
-									player: "useCardToTargeted",
-								},
-								logTarget: "target",
-								check: function (event, player) {
-									// var num = player.getAttackRange();
-									return get.attitude(player, event.target) <= -2;
-								},
-								filter: function (event, player) {
-									if (!player.storage.mouliegong) player.storage.mouliegong = [];
-									if (player.storage.mouliegong.length <= 0) return false;
-									return event.card.name == 'sha' && event.targets.length == 1;
-								},
-								content: function () {
-									'step 0'
-
-									trigger.card.mouliegong = true;
-									// var num = player.getAttackRange();
-									// var cards = get.cards(Math.min(Math.ceil(num / 2), 5));
-									event.num = player.storage.mouliegong.length - 1;
-									if (event.num <= 0) {
-										game.log(player, '展示0张牌');
-										trigger.target.storage.mouliegong3 = player.storage.mouliegong.slice(0);
-										trigger.target.addTempSkill('mouliegong3');
-										event.finish();
-									}
-									'step 1'
-									var cards = get.cards(Math.max(event.num, 0));
-
-									for (var i = cards.length - 1; i--; i >= 0) {
-										ui.cardPile.insertBefore(cards[i], ui.cardPile.firstChild);
-									}
-									game.updateRoundNumber();
-									event.cards = cards;
-									player.showCards(cards, get.translation(player) + '对' + get.translation(trigger.target) + '发动了【烈弓】');
-									'step 2'
-									// var list = [];
-									var id = trigger.target.playerid;
-									var map = trigger.getParent().customArgs;
-									if (!map[id]) map[id] = {};
-									if (typeof map[id].extraDamage != 'number') {
-										map[id].extraDamage = 0;
-									}
-									for (var i of cards) {
-										// if (player.storage.mouliegong.contains(get.suit(i)) && !list.contains(get.suit(i))) {
-										//     list.push(get.suit(i));
-										// }
-										if (player.storage.mouliegong.contains(get.suit(i))) {
-											map[id].extraDamage++;
-										}
-									}
-									trigger.target.storage.mouliegong3 = player.storage.mouliegong.slice(0);
-									trigger.target.addTempSkill('mouliegong3');
-
-
-								},
-								ai: {
-									"directHit_ai": true,
-								},
-							},
-							"mouliegong3": {
-								mod: {
-									cardEnabled: function (card, player) {
-										if (player.storage.mouliegong3.contains(get.suit(card))) return false;
-									},
-									cardRespondable: function (card, player) {
-										if (player.storage.mouliegong3.contains(get.suit(card))) return false;
-									},
-								},
-								mark: true,
-								marktext: "烈弓",
-								intro: {
-									name: "烈弓",
-									content: "不可响应花色：$",
-								},
-								firstDo: true,
-								onremove: true,
-								trigger: {
-									player: ["damage", "damageCancelled", "damageZero"],
-									target: ["shaMiss", "useCardToExcluded"],
-								},
-								charlotte: true,
-								filter: function (event, player) {
-									return player.storage.mouliegong3;
-								},
-								silent: true,
+							lilianghuiyao: {
+								trigger: { player: "phaseBegin" },
 								forced: true,
-								popup: false,
-								content: function () {
-									delete player.storage.mouliegong3;
-									player.removeSkill('mouliegong3');
+								filter: function(event, player) {
+									return player.hp <= Math.floor(player.maxHp / 2);
 								},
-							},
-							"mouliegong2": {
-								trigger: {
-									player: "useCardAfter",
-								},
-								filter: function (event, player) {
-									return event.card.name == 'sha' && event.card.mouliegong == true;
-								},
-								direct: true,
-								content: function () {
-									delete player.storage.mouliegong;
-									player.unmarkSkill('mouliegong');
-								},
-							},
-							"mouliegong4": {
-								trigger: {
-									player: "useCard",
-								},
-								filter: function (event, player) {
-									if (!player.storage.mouliegong) player.storage.mouliegong = [];
-									return get.suit(event.card) != undefined && get.suit(event.card) != 'none' && !player.storage.mouliegong.contains(get.suit(event.card));
-								},
-								direct: true,
-								content: function () {
-									if (!player.storage.mouliegong) player.storage.mouliegong = [];
-									player.storage.mouliegong.push(get.suit(trigger.card));
-									player.storage.mouliegong.sort();
-									player.markSkill('mouliegong');
-									player.syncStorage('mouliegong');
-								},
-							},
-							"mouliegong5": {
-								trigger: {
-									target: "useCardToTarget",
-								},
-								logTarget: "player",
-								filter: function (event, player) {
-									if (!player.storage.mouliegong) player.storage.mouliegong = [];
-									return get.suit(event.card) != undefined && get.suit(event.card) != 'none' && !player.storage.mouliegong.contains(get.suit(event.card));
-								},
-								direct: true,
-								content: function () {
-									if (!player.storage.mouliegong) player.storage.mouliegong = [];
-									player.storage.mouliegong.push(get.suit(trigger.card));
-									player.storage.mouliegong.sort();
-									player.markSkill('mouliegong');
-									player.syncStorage('mouliegong');
-								},
-							},
-							moutieqi: {
-								audio: "ext:谋攻篇:4",
-								shaRelated: true,
-								trigger: {
-									player: "useCardToPlayered",
-								},
-								check: function (event, player) {
-									return get.attitude(player, event.target) <= 0;
-								},
-								filter: function (event, player) {
-									return event.card.name == 'sha';
-								},
-								logTarget: "target",
-								content: function () {
+								content: function() {
 									'step 0'
-									if (!trigger.target.hasSkill('fengyin')) trigger.target.addTempSkill('fengyin');
-									trigger.getParent().directHit.add(trigger.target);
+									player.judge(function(card) {
+										if (get.color(card) == 'black') {
+											player.maxHp += 2;
+											player.update();
+											game.log(player, '的体力上限增加了2');
+										} else if (get.color(card) == 'red') {
+											player.recover(2);
+											game.log(player, '恢复了2点体力');
+										}
+									});
+								},
+							},
+							wujianchaoying: {
+								enable: "phaseUse",
+								filter: function(event, player) {
+									return player.hp % 2 === 0;
+								},
+								content: function() {
+									'step 0'
+									player.chooseBool('是否消耗一半的体力值以在两回合内造成的伤害翻倍？').ai = function() {
+										return true;
+									};
 									'step 1'
-									player.chooseControl('直取敌营', '扰阵疲敌').set('prompt', '谋弈：请选择你的进攻策略').set('ai', function () {
-										if (trigger.target.countCards('he') <= 0) return '扰阵疲敌';
-										return ['直取敌营', '扰阵疲敌'].randomGet();
-									});
-									'step 2'
-									event.res = result.control;
-									trigger.target.chooseControl('直取敌营', '扰阵疲敌').set('prompt', '谋弈：请猜测' + get.translation(player) + '的进攻策略').set('ai', function () {
-										if (trigger.target.countCards('he') <= 0) return '扰阵疲敌';
-										return ['直取敌营', '扰阵疲敌'].randomGet();
-									});
-									'step 3'
-									var str;
-									player.popup(event.res);
-									trigger.target.popup(result.control);
-									game.log(player, '谋弈', event.res == result.control ? '#y失败' : '#g成功');
-									if (event.res != result.control) {
-										//game.playAudio('..','extension','谋攻篇','mouduanliang3');
-										str = get.translation(player) + '谋弈成功';
+									if (result.bool) {
+										player.loseHp(Math.floor(player.hp / 2));
+										player.addTempSkill('wujianchaoying_damage', { player: 'phaseEnd' }, 'phaseEnd+2');
+										game.log(player, '消耗了一半的体力值，使得两回合内造成的伤害翻倍');
 									}
-									else {
-										//game.playAudio('..','extension','谋攻篇','mouduanliang4');
-										str = get.translation(trigger.target) + '谋弈成功';
+								},
+								subSkill: {
+									damage: {
+										trigger: { source: "damageBegin" },
+										forced: true,
+										content: function() {
+											trigger.num *= 2;
+										}
 									}
-									game.broadcastAll(function (str) {
-										var dialog = ui.create.dialog(str);
-										dialog.classList.add('center');
-										setTimeout(function () {
-											dialog.close();
-										}, 1000);
-									}, str);
-									game.delay(2);
-									if (event.res == result.control) event.finish();
-									'step 4'
-									if (event.res == '直取敌营' && trigger.target.countGainableCards(player, 'he') > 0) player.gainPlayerCard(trigger.target, true, 'he');
-									if (event.res == '扰阵疲敌') player.draw(2);
 								},
-								ai: {
-									ignoreSkill: true,
-									"directHit_ai": true,
-									skillTagFilter: function (player, tag, arg) {
-										if (tag == 'directHit_ai') return get.attitude(player, arg.target) <= 0;
-										if (!arg || arg.isLink || !arg.card || arg.card.name != 'sha') return false;
-										if (!arg.target || get.attitude(player, arg.target) >= 0) return false;
-										if (!arg.skill || !lib.skill[arg.skill] || lib.skill[arg.skill].charlotte || get.is.locked(arg.skill) || !arg.target.getSkills(true, false).contains(arg.skill)) return false;
-									},
-								},
+								info: "出牌阶段，若当前体力值为双数，可选择立刻消耗一半的体力值，令自身两回合内造成的伤害翻倍。"
 							},
 							mouduanliang: {
 								audio: "ext:谋攻篇:2",
