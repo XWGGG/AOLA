@@ -1,9 +1,6 @@
 game.import("extension", function (lib, game, ui, get, ai, _status) {
 	return {
-		name: "AOLA", content: function (config, pack) {
-			lib.rank.rarity.legend.push("liliangwang");
-			lib.rank.rarity.legend.push("kaltsit");
-			lib.rank.rarity.legend.push("xihe");
+		name: "奥拉星", content: function (config, pack) {
 			lib.group.push("ao");
 			lib.translate["ao"] = "奥";
 		}, precontent: function (ext) {
@@ -13,8 +10,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						name: "aolaxing",
 						connect: true,
 						characterSort: {
-							AOLA: {
-								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun"],
+							奥拉星: {
+								奥拉星: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun"],
 								其他: []
 							}
 						},
@@ -40,9 +37,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"liliangwang": "力量王",
 							lilianghuiyao: "力量辉耀",
-							"lilianghuiyao_info": "回合开始时，若自身当前体力值不超过体力上限的一半，则判定一次，黑色体力上限+2，红色体力值+2。",
+							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+2。",
 							wujianchaoying: "无间超影",
-							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择立刻消耗一半的体力值，令自身两回合内造成的伤害翻倍。",
+							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择消耗一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制。",
 
 							"xihe": "羲和",
 							lishi: "离时",
@@ -58,7 +55,16 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 						},
 						skill: {
-							
+							_dieAudioMOU: {
+								trigger: { global: 'dieBegin', },
+								priority: 2,
+								forced: true,
+								unique: true,
+								frequent: true,
+								content: function () {
+									if (trigger.player.name) game.playAudio('..', 'extension', '奥拉星', trigger.player.name);
+								}
+							},
 							shenhuazhuzai : {
 								trigger: { player: "phaseBegin" },
 								skillAnimation: true,
@@ -234,80 +240,68 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 														
 							lilianghuiyao: {
-								trigger: { player: "phaseBegin" },
+								trigger: { player: "damageEnd" },
 								forced: true,
-								filter: function(event, player) {
-									return player.hp <= Math.floor(player.maxHp / 2);
-								},
 								content: function() {
 									'step 0'
 									player.judge(function(card) {
-										if (get.color(card) == 'black') {
-											player.maxHp += 2;
-											player.update();
-											game.log(player, '的体力上限增加了2');
-										} else if (get.color(card) == 'red') {
-											player.recover(2);
-											game.log(player, '恢复了2点体力');
-										}
+										return get.color(card);
 									});
+									'step 1'
+									if (result.color == 'black') {
+										player.maxHp += 2;
+										player.update();
+										game.log(player, '的体力上限增加了2');
+									} else if (result.color == 'red') {
+										var recoverAmount = Math.floor(player.maxHp / 2);
+										player.recover(recoverAmount);
+										game.log(player, '恢复了', recoverAmount, '点体力');
+									}
 								},
 							},
+							
 							wujianchaoying: {
 								enable: "phaseUse",
+								usable: 1,
 								filter: function(event, player) {
 									return player.hp % 2 === 0;
 								},
 								content: function() {
 									'step 0'
-									player.chooseBool('是否消耗一半的体力值以在两回合内造成的伤害翻倍？').ai = function() {
+									player.chooseBool('是否消耗一半的体力值以在本回合内造成的伤害翻倍并解除杀的使用限制？').ai = function() {
 										return true;
 									};
 									'step 1'
 									if (result.bool) {
 										player.loseHp(Math.floor(player.hp / 2));
-										player.addSkill('wujianchaoying_damageBoost');
-										player.storage.wujianchaoying_turns = 0; // 初始化回合计数
-										player.markSkill('wujianchaoying');
-										player.addSkill('wujianchaoying_endEffects'); // 添加计时器子技能
-										game.log(player, '消耗了一半的体力值，使得两回合内造成的伤害翻倍');
+										player.addTempSkill('wujianchaoying_effect', {player: 'phaseEnd'});
+										game.log(player, '消耗了一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制');
 									}
 								},
 								subSkill: {
-									damageBoost: {
-										trigger: { source: "damageBefore" },
+									effect: {
+										trigger: {source: "damageBefore"},
 										forced: true,
-										filter: function(event, player) { return event.source === player; },
+										filter: function(event, player) {
+											return event.source === player;
+										},
 										content: function() {
 											trigger.num *= 2;
 										},
-										sub: true,
-									},
-									endEffects: {
-										trigger: { player: "phaseEnd" },
-										forced: true,
-										content: function() {
-											player.storage.wujianchaoying_turns += 1; // 增加回合计数
-											if (player.storage.wujianchaoying_turns >= 2) {
-												player.removeSkill('wujianchaoying_damageBoost'); // 移除子技能
-												player.removeSkill('wujianchaoying_endEffects'); // 移除计时器子技能
-												player.unmarkSkill('wujianchaoying');
-												game.log(player, '两回合内造成的伤害翻倍效果结束');
-											}
+										mod: {
+											targetInRange: function(card) {
+												if (card.name == 'sha') return true;
+											},
+											cardUsable: function(card, player, num) {
+												if (card.name == 'sha') return Infinity;
+											},
 										},
 										sub: true,
-									}
+									},
 								},
-								mark: true,
-								intro: {
-									content: function(storage, player) {
-										if (player.storage.wujianchaoying_turns !== undefined) {
-											return '当前伤害翻倍状态剩余回合数：' + (2 - player.storage.wujianchaoying_turns);
-										}
-										return '消耗一半体力值使两回合内造成的伤害翻倍';
-									}
-								},
-							},			
+							},
+							
+										
 							mon3ter: {
 								trigger: { player: 'phaseUse' },
 								direct: true,
@@ -362,12 +356,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 					};
 					if (lib.device || lib.node) {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("ext:AOLA/" + i + ".jpg");
+							aolaxing.character[i][4].push("ext:奥拉星/" + i + ".jpg");
 						}
 					}
 					else {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("db:extension-AOLA:" + i + ".jpg");
+							aolaxing.character[i][4].push("db:extension-奥拉星:" + i + ".jpg");
 						}
 					}
 					return aolaxing;
@@ -747,19 +741,19 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							xieli_tongchou: {
 								fullimage: true,
-								image: 'ext:AOLA/xieli_tongchou.png',
+								image: 'ext:奥拉星/xieli_tongchou.png',
 							},
 							xieli_bingjin: {
 								fullimage: true,
-								image: 'ext:AOLA/xieli_bingjin.png',
+								image: 'ext:奥拉星/xieli_bingjin.png',
 							},
 							xieli_shucai: {
 								fullimage: true,
-								image: 'ext:AOLA/xieli_shucai.png'
+								image: 'ext:奥拉星/xieli_shucai.png'
 							},
 							xieli_luli: {
 								fullimage: true,
-								image: 'ext:AOLA/xieli_luli.png'
+								image: 'ext:奥拉星/xieli_luli.png'
 							}
 						},
 						translate: {
@@ -776,16 +770,16 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						lishit: []
 					};
 					for (var i in aolaxing.card) {
-						aolaxing.card[i].image = ("ext:AOLA/" + i + ".png");
+						aolaxing.card[i].image = ("ext:奥拉星/" + i + ".png");
 					}
 					return aolaxing;
 				});
 				lib.config.all.characters.push("aolaxing");
 				if (!lib.config.characters.contains("aolaxing")) lib.config.characters.push("aolaxing");
-				lib.translate["aolaxing_character_config"] = "AOLA";
+				lib.translate["aolaxing_character_config"] = "奥拉星";
 				lib.config.all.cards.push("aolaxing");
 				if (!lib.config.cards.contains("aolaxing")) lib.config.cards.push("aolaxing");
-				lib.translate["aolaxing_card_config"] = "AOLA";
+				lib.translate["aolaxing_card_config"] = "奥拉星";
 			}
 		}, help: {}, config: {}, package: {
 			character: {
