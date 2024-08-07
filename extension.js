@@ -155,8 +155,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									'step 2'
 									switch (result.judge) {
 										case 1:
-											player.gainMaxHp();
-											player.update();
 											player.recover();
 											break;
 										case 2:
