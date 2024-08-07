@@ -18,7 +18,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						character: {
 							"wumianzhiwang": ["male", "ao", 3, ["qian", "lvlicaijue"], ["die_audio"]],
 							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
-							"kaltsit": ["female", "ao","3/3/3", ["mon3ter", "buhui"], ["die_audio"]],
+							"kaltsit": ["female", "群","2/4/2", ["mon3ter", "buhui"], ["die_audio"]],
 							"xihe": ["female", "ao", 3, ["shiguang", "lishi"], ["die_audio"]],
 							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
 							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
@@ -29,7 +29,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							qian: "潜",
 							"qian_info": "每次即将受到伤害时，判定一次，若不为黑桃，则此次伤害降至0。",
 							lvlicaijue: "律理裁决",
-							"lvlicaijue_info": "使用杀造成伤害后，令目标停止行动一回合，否则抽取目标一张牌。",
+							"lvlicaijue_info": "当你对目标造成伤害后，令目标停止行动一回合。",
 
 							"kaltsit": "凯尔希",
 							mon3ter: "怪物3",
@@ -39,7 +39,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"liliangwang": "力量王",
 							lilianghuiyao: "力量辉耀",
-							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+3，如果技能触发后玩家的体力为单数，则额外恢复1点体力并摸一张牌。",
+							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+2，如果技能触发后玩家的体力为单数，则额外恢复1点体力并摸一张牌。",
 							wujianchaoying: "无间超影",
 							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择消耗一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制。",
 
@@ -47,7 +47,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							lishi: "离时",
 							"lishi_info": "上场立刻触发：所有角色每次回合开始时，增加1个离时标记，若标记数量达到或超过12个，清空标记。羲和清空标记时增加体力上限并回满体力值，其他角色则直接死亡。",
 							shiguang: "时光",
-							"shiguang_info": "场上每当有人体力值发生变化后，判定一次，若为黑桃，受伤者离时标记+6，否则离时标记+1。",
+							"shiguang_info": "场上每当有人体力值发生变化后，判定一次，若为黑桃，此人离时标记+6，否则离时标记+1。",
 
 							"qiankun": "乾坤",
 							shenhuazhuzai: "神化主宰",
@@ -63,9 +63,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"shangguxinglong": "上古星龙",
 							xingshenzhiyu: "星神之域",
-							"xingshenzhiyu_info": "每回合开始时获得1枚“星神之域”标记，受到伤害前，可以选择消耗1个标记来抵消此次伤害。",
+							"xingshenzhiyu_info": "每回合开始时获得1枚“星神之域”标记，受伤前，可以选择消耗1个标记来抵消此次伤害。",
 							yuanhunzhansha: "元魂斩杀",
-							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力以及上限；方块：摸两张牌；黑桃：伤害+1；梅花：“星神之域”标记+1",
+							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力；方块：摸两张牌；黑桃：伤害+1；梅花：“星神之域”标记+1",
 
 						},
 						skill: {
@@ -155,7 +155,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									'step 2'
 									switch (result.judge) {
 										case 1:
-											player.recover(2);
+											player.gainMaxHp();
+											player.update();
+											player.recover();
 											break;
 										case 2:
 											player.draw(2);
@@ -168,13 +170,30 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											break;
 									}
 									'step 3'
-									if (event.extraDamage) {
-										target.damage(2);
-										event.extraDamage = false;
+									if (target.countCards('h', 'shan')) {
+										target.chooseToUse({ name: 'shan' }, '使用一张闪来闪避这次攻击').set('ai', function(card) {
+											return -1;
+										});
 									} else {
-										target.damage(1);
+										if (event.extraDamage) {
+											target.damage(2);
+											event.extraDamage = false;
+										} else {
+											target.damage(1);
+										}
+										event.goto(1);
 									}
 									'step 4'
+									if (result.bool) {
+										player.storage.yuanhunzhansha++; // Increase the attack count if dodged
+									} else {
+										if (event.extraDamage) {
+											target.damage(2);
+											event.extraDamage = false;
+										} else {
+											target.damage(1);
+										}
+									}
 									event.goto(1);
 								},
 								ai: {
@@ -189,7 +208,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									content: '对指定目标进行多次连续攻击，攻击次数等于消耗的标记数。',
 								},
 							},
-							
+														
 							lianyu: {
 								enable: "phaseUse",
 								usable: 1,
@@ -464,8 +483,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											player.update();
 											game.log(player, '的体力上限增加了2');
 										} else if (get.color(card) == 'red') {
-											player.recover(3);
-											game.log(player, '恢复了3点体力');
+											player.recover(2);
+											game.log(player, '恢复了2点体力');
 										}
 									});
 									'step 1'
@@ -581,414 +600,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 					}
 					return aolaxing;
 				});
-				game.import("card", function () {
-					var aolaxing = {
-						name: "aolaxing",
-						connect: true,
-						card: {
-							"xieli_tongchou": {
-								fullskin: true
-							},
-							"xieli_bingjin": {
-								fullskin: true
-							},
-							"xieli_shucai": {
-								fullskin: true
-							},
-							"xieli_luli": {
-								fullskin: true
-							}
-						},
-						skill: {
-							xieli: {
-								trigger: {
-									global: ['phaseEnd', 'die'],
-								},
-								forced: true,
-								charlotte: true,
-								priority: 1,
-								onremove: function (player) {
-									delete player.storage.xieli;
-									var skills = ['xieli_tongchou', 'xieli_bingjin', 'xieli_shucai', 'xieli_luli'];
-									for (var skill of skills) {
-										if (!player.storage[skill]) continue;
-										player.removeSkill(skill);
-									}
-								},
-								filter: function (event, player) {
-									return player.storage.xieli.contains(event.player);
-								},
-								content: function () {
-									'step 0'
-									player.storage.xieli.splice(player.storage.xieli.indexOf(trigger.player), 1);
-									var skills = ['xieli_tongchou', 'xieli_bingjin', 'xieli_shucai', 'xieli_luli'];
-									for (var skill of skills) {
-										if (!player.storage[skill]) continue;
-										for (var i = player.storage[skill].length - 1; i >= 0; i--) {
-											var info = player.storage[skill][i];
-											if (info.player == trigger.player) {
-												if (info.bool == false) {
-													game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(trigger.player) + '</span>协力' + get.translation(skill), '#y失败');
-												}
-												player.storage[skill].splice(i, 1);
-											}
-										}
-										if (player.storage[skill].length == 0) {
-											player.removeSkill(skill);
-										}
-										else player.markSkill(skill);
-									}
-								},
-								subSkill: {
-									tongchou: {
-										priority: 1,
-										mark: true,
-										trigger: { global: 'damageSource' },
-										charlotte: true,
-										forced: true,
-										popup: false,
-										init: function (player, skill) {
-											if (!player.storage[skill]) player.storage[skill] = [];
-										},
-										onremove: function (player) {
-											var skill = 'xieli_tongchou';
-
-											if (player.storage[skill]) delete player.storage[skill];
-										},
-										intro: {
-											content: function (storage, player) {
-												var str = '';
-												for (var i = 0; i < player.storage.xieli_tongchou.length; i++) {
-													var bool_str = storage[i].bool ? '<span class="greentext">成功</span>' : '';
-													var skill_str = '<span class="greentext">【' + get.translation(storage[i].skill) + '】</span>';
-													str += '与<span class="bluetext">' + get.translation(storage[i].player) + '</span>' + skill_str + '<span class=firetext>同仇</span>'
-														+ bool_str
-														+ '，共造成' + get.cnNumber(storage[i].data) + '点伤害<br>';
-												}
-												return str.slice(0, str.length - '<br>'.length);
-											},
-										},
-										filter: function (event, player) {
-											if (event.source == player) return true;
-											for (var i = 0; i < player.storage.xieli_tongchou.length; i++) {
-												if (event.num > 0 && (event.source == player.storage.xieli_tongchou[i].player)) return true;
-											}
-											return false
-										},
-										content: function () {
-											'step 0'
-											var skill = 'xieli_tongchou';
-
-											if (trigger.source == player) {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													info.data += trigger.num;
-													if (info.data >= 4 && info.bool == false) {
-														info.bool = true;
-														if (!player.storage.xieli) player.storage.xieli = [];
-														player.storage.xieli.push(info.skill);
-														game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-														event.trigger('xieli_achieve');
-													}
-
-												}
-											}
-											else {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													if (info.player == trigger.source) {
-														info.data += trigger.num;
-														if (info.data >= 4 && info.bool == false) {
-															info.bool = true;
-															if (!player.storage.xieli) player.storage.xieli = [];
-															player.storage.xieli.push(info.skill);
-															game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-															event.trigger('xieli_achieve');
-														}
-													} else continue;
-												}
-											}
-											player.markSkill(skill);
-										},
-									},
-									bingjin: {
-										priority: 1,
-										mark: true,
-										trigger: { global: 'drawAfter' },
-										charlotte: true,
-										forced: true,
-										popup: false,
-										init: function (player, skill) {
-											if (!player.storage[skill]) player.storage[skill] = [];
-										},
-										onremove: function (player) {
-											var skill = 'xieli_bingjin';
-											if (player.storage[skill]) delete player.storage[skill];
-										},
-										intro: {
-											content: function (storage, player) {
-												var str = '';
-												for (var i = 0; i < player.storage.xieli_bingjin.length; i++) {
-													var bool_str = storage[i].bool ? '<span class="greentext">成功</span>' : '';
-													var skill_str = '<span class="greentext">【' + get.translation(storage[i].skill) + '】</span>';
-													str += '与<span class="bluetext">' + get.translation(storage[i].player) + '</span>' + skill_str + '<span class=firetext>并进</span>'
-														+ bool_str
-														+ '，共摸了' + get.cnNumber(storage[i].data) + '张牌<br>';
-												}
-												return str.slice(0, str.length - '<br>'.length);
-											},
-										},
-										filter: function (event, player) {
-											if (event.player == player) return true;
-											for (var i = 0; i < player.storage.xieli_bingjin.length; i++) {
-												if (event.player == player.storage.xieli_bingjin[i].player) return true;
-											}
-											return false;
-										},
-										content: function () {
-											'step 0'
-											var skill = 'xieli_bingjin';
-											if (trigger.player == player) {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													info.data += trigger.result.length;
-													if (info.data >= 8 && info.bool == false) {
-														info.bool = true;
-														if (!player.storage.xieli) player.storage.xieli = [];
-														player.storage.xieli.push(info.skill);
-														game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-														event.trigger('xieli_achieve');
-													}
-
-												}
-											}
-											else {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													if (info.player == trigger.player) {
-														info.data += trigger.result.length;
-														if (info.data >= 8 && info.bool == false) {
-															info.bool = true;
-															if (!player.storage.xieli) player.storage.xieli = [];
-															player.storage.xieli.push(info.skill);
-															game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-															event.trigger('xieli_achieve');
-														}
-													} else continue;
-												}
-											}
-											player.markSkill(skill);
-										},
-									},
-									shucai: {
-										priority: 1,
-										mark: true,
-										trigger: { global: 'loseAfter' },
-										charlotte: true,
-										forced: true,
-										popup: false,
-										init: function (player, skill) {
-											if (!player.storage[skill]) player.storage[skill] = [];
-										},
-										onremove: function (player) {
-											var skill = 'xieli_shucai';
-											if (player.storage[skill]) delete player.storage[skill];
-										},
-										intro: {
-											content: function (storage, player) {
-												var str = '';
-												for (var i = 0; i < player.storage.xieli_shucai.length; i++) {
-													var bool_str = storage[i].bool ? '<span class="greentext">成功</span>' : '';
-													var skill_str = '<span class="greentext">【' + get.translation(storage[i].skill) + '】</span>';
-													str += '与<span class="bluetext">' + get.translation(storage[i].player) + '</span>' + skill_str + '<span class=firetext>疏财</span>'
-														+ bool_str
-														+ '，共弃置了' + get.translation(storage[i].data) + '<br>';
-												}
-												return str.slice(0, str.length - '<br>'.length);
-											},
-										},
-										filter: function (event, player) {
-											if (event.type != 'discard') return false;
-											var flags = false;
-											for (var i = 0; i < event.cards2.length; i++) {
-												var suit = get.suit(event.cards2[i], event.player);
-												if (suit != 'none' && suit != undefined) {
-													flags = true; break;
-												}
-											}
-											if (!flags) return false;
-											if (event.player == player) return true;
-											for (var i = 0; i < player.storage.xieli_shucai.length; i++) {
-												if (event.player == player.storage.xieli_shucai[i].player && !player.storage.xieli_shucai[i].bool) return true;
-											}
-											return false;
-										},
-										content: function () {
-											'step 0'
-											var skill = 'xieli_shucai';
-											var suits = [];
-											for (var i = 0; i < trigger.cards2.length; i++) {
-												var suit = get.suit(trigger.cards2[i], trigger.player);
-												if (suit != 'none' && suit != undefined && !suits.contains(suit)) {
-													suits.push(suit);
-												}
-											}
-											if (trigger.player == player) {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													for (var suit of suits) {
-														if (!info.data.contains(suit)) info.data.push(suit);
-													}
-													info.data.sort();
-													if (info.data.length == 4 && info.bool == false) {
-														info.bool = true;
-														if (!player.storage.xieli) player.storage.xieli = [];
-														player.storage.xieli.push(info.skill);
-														game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-														event.trigger('xieli_achieve');
-													}
-
-												}
-											}
-											else {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													if (info.player == trigger.player) {
-														for (var suit of suits) {
-															if (!info.data.contains(suit)) info.data.push(suit);
-														}
-														info.data.sort();
-														if (info.data.length == 4 && info.bool == false) {
-															info.bool = true;
-															if (!player.storage.xieli) player.storage.xieli = [];
-															player.storage.xieli.push(info.skill);
-															game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-															event.trigger('xieli_achieve');
-														}
-													} else continue;
-												}
-											}
-											player.markSkill(skill);
-										},
-									},
-									luli: {
-										priority: 1,
-										mark: true,
-										trigger: { global: ['useCard', 'respond'] },
-										charlotte: true,
-										forced: true,
-										popup: false,
-										init: function (player, skill) {
-											if (!player.storage[skill]) player.storage[skill] = [];
-										},
-										onremove: function (player) {
-											var skill = 'xieli_luli';
-											if (player.storage[skill]) delete player.storage[skill];
-										},
-
-										intro: {
-											content: function (storage, player) {
-												var str = '';
-												for (var i = 0; i < player.storage.xieli_luli.length; i++) {
-													var bool_str = storage[i].bool ? '<span class="greentext">成功</span>' : '';
-													var skill_str = '<span class="greentext">【' + get.translation(storage[i].skill) + '】</span>';
-													str += '与<span class="bluetext">' + get.translation(storage[i].player) + '</span>' + skill_str + '<span class=firetext>勠力</span>'
-														+ bool_str
-														+ '，使用或打出了' + get.translation(storage[i].data) + '<br>';
-												}
-												return str.slice(0, str.length - '<br>'.length);
-											},
-										},
-										filter: function (event, player) {
-											if (get.suit(event.card, event.player) != 'none' && get.suit(event.card, event.player)) {
-												if (event.player == player) return true;
-												for (var i = 0; i < player.storage.xieli_luli.length; i++) {
-													if (event.player == player.storage.xieli_luli[i].player && !player.storage.xieli_luli[i].bool) return true;
-												}
-											}
-											return false;
-										},
-										content: function () {
-											'step 0'
-											var skill = 'xieli_luli';
-											var suits = [];
-
-											suits = [get.suit(trigger.card, trigger.player)];
-											if (trigger.player == player) {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													for (var suit of suits) {
-														if (!info.data.contains(suit)) info.data.push(suit);
-													}
-													info.data.sort();
-													if (info.data.length == 4 && info.bool == false) {
-														info.bool = true;
-														if (!player.storage.xieli) player.storage.xieli = [];
-														player.storage.xieli.push(info.skill);
-														game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-														event.trigger('xieli_achieve');
-													}
-
-												}
-											}
-											else {
-												for (var i = 0; i < player.storage[skill].length; i++) {
-													var info = player.storage[skill][i];
-													if (info.player == trigger.player) {
-														for (var suit of suits) {
-															if (!info.data.contains(suit)) info.data.push(suit);
-														}
-														info.data.sort();
-														if (info.data.length == 4 && info.bool == false) {
-															info.bool = true;
-															if (!player.storage.xieli) player.storage.xieli = [];
-															player.storage.xieli.push(info.skill);
-															game.log('<span class="bluetext">' + get.translation(player) + '</span>与<span class="bluetext">' + get.translation(info.player) + '</span>协力' + get.translation(skill), '#g成功');
-															event.trigger('xieli_achieve');
-														}
-													} else continue;
-												}
-											}
-											player.markSkill(skill);
-										},
-									},
-								}
-							},
-							xieli_tongchou: {
-								fullimage: true,
-								image: 'ext:奥拉星/xieli_tongchou.png',
-							},
-							xieli_bingjin: {
-								fullimage: true,
-								image: 'ext:奥拉星/xieli_bingjin.png',
-							},
-							xieli_shucai: {
-								fullimage: true,
-								image: 'ext:奥拉星/xieli_shucai.png'
-							},
-							xieli_luli: {
-								fullimage: true,
-								image: 'ext:奥拉星/xieli_luli.png'
-							}
-						},
-						translate: {
-							xieli: '协力',
-							xieli_tongchou: '同仇',
-							xieli_bingjin: '并进',
-							xieli_shucai: '疏财',
-							xieli_luli: '勠力',
-							xieli_tongchou_info: '你与其造成的伤害之和不小于4点',
-							xieli_bingjin_info: '你与其摸牌数之和不小于8张',
-							xieli_shucai_info: '你与其弃置的牌包含4种花色',
-							xieli_luli_info: '你与其使用或打出的牌包含4种花色',
-						},
-						lishit: []
-					};
-					for (var i in aolaxing.card) {
-						aolaxing.card[i].image = ("ext:奥拉星/" + i + ".png");
-					}
-					return aolaxing;
-				});
 				lib.config.all.characters.push("aolaxing");
 				if (!lib.config.characters.contains("aolaxing")) lib.config.characters.push("aolaxing");
 				lib.translate["aolaxing_character_config"] = "奥拉星";
@@ -1010,7 +621,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 				skill: {},
 				translate: {}
 			},
-			intro: "来自萌新潜水群的扩展更新，潜水群QQ: 740019074，能力有限，仅在潜水群回答问题。",
+			intro: "可联机的奥拉星武将扩展包，本来是想做明日方舟武将扩展的，于是有了凯尔希，后来还是觉得奥拉星的很多角色机制更有趣一点，于是就改成奥拉星了。",
 			author: "潜水群",
 			diskURL: "",
 			forumURL: "",
