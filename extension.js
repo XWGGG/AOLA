@@ -11,18 +11,18 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							奥拉星: {
-								奥拉星: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun"],
+								奥拉星: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong"],
 								其他: []
 							}
 						},
 						character: {
 							"wumianzhiwang": ["male", "ao", 3, ["qian", "lvlicaijue"], ["die_audio"]],
 							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
-							"kaltsit": ["female", "ao","1/4/5", ["mon3ter", "buhui"], ["die_audio"]],
-							"xihe": ["female", "ao", 4, ["shiguang", "lishi"], ["die_audio"]],
-							"qiankun": ["male", "ao",3, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
+							"kaltsit": ["female", "ao","3/3/3", ["mon3ter", "buhui"], ["die_audio"]],
+							"xihe": ["female", "ao", 3, ["shiguang", "lishi"], ["die_audio"]],
+							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
 							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
-							
+							"shangguxinglong": ["male", "ao",4, ["xingshenzhiyu","yuanhunzhansha"], ["die_audio"]],
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
@@ -60,6 +60,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"lianyu_info": "出牌阶段限一次：弃掉一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣。",
 							tianzui: "天罪",
 							"tianzui_info": "在出牌阶段限一次使用。弃置一张黑桃花色的手牌，直接吸取目标角色的一点体力值与体力上限。",
+
+							"shangguxinglong": "上古星龙",
+							xingshenzhiyu: "星神之域",
+							"xingshenzhiyu_info": "每回合开始时获得1枚“星神之域”标记，受到伤害前，可以选择消耗1个标记来抵消此次伤害。",
+							yuanhunzhansha: "元魂斩杀",
+							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力以及上限；方块：摸两张牌；黑桃：伤害+1；梅花：“星神之域”标记+1",
+
 						},
 						skill: {
 							_dieAudioMOU: {
@@ -72,7 +79,117 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (trigger.player.name) game.playAudio('..', 'extension', '奥拉星', trigger.player.name);
 								}
 							},
-
+							xingshenzhiyu: {
+								trigger: { player: 'phaseBegin' },
+								forced: true,
+								mark: true,
+								content: function() {
+									player.addMark('xingshenzhiyu', 1);
+									// Add temporary skill
+									if (!player.hasSkill('xingshenzhiyu_dixiao')) {
+										player.addSkill('xingshenzhiyu_dixiao');
+									}
+								},
+								intro: {
+									content: '每个回合开始时获得1个星神之域标记。'
+								},
+								subSkill: {
+									dixiao: {
+										trigger: { player: 'damageBefore' },
+										filter: function(event, player) {
+											return player.countMark('xingshenzhiyu') > 0;
+										},
+										direct: true,
+										content: function() {
+											'step 0'
+											player.chooseControl('确认消耗', '取消').set('ai', function() {
+												if (player.countMark('xingshenzhiyu') > 1) return '确认消耗';
+												return '取消';
+											}).set('prompt', '是否消耗1个星神之域标记来抵消此次伤害？');
+											'step 1'
+											if (result.control == '确认消耗') {
+												player.removeMark('xingshenzhiyu', 1);
+												trigger.num = 0; // Nullify damage
+												var chat = ['星神之域化解了此次伤害！'].randomGet();
+												player.say(chat);
+												// Check mark count, remove temporary skill if zero
+												if (player.countMark('xingshenzhiyu') === 0) {
+													player.removeSkill('xingshenzhiyu_dixiao');
+												}
+											} else if (result.control == '取消') {
+												// Do nothing
+											}
+										},
+									}
+								},
+							},
+							
+							yuanhunzhansha: {
+								enable: 'phaseUse',
+								filter: function(event, player) {
+									return player.countMark('xingshenzhiyu') >= 3;
+								},
+								filterTarget: function(card, player, target) {
+									return player != target;
+								},
+								selectTarget: 1,
+								content: function() {
+									'step 0'
+									var marks = player.countMark('xingshenzhiyu');
+									player.removeMark('xingshenzhiyu', marks);
+									player.storage.yuanhunzhansha = marks;
+									player.markSkill('yuanhunzhansha');
+									'step 1'
+									if (player.storage.yuanhunzhansha > 0) {
+										player.storage.yuanhunzhansha--;
+										player.judge(function(card) {
+											if (get.suit(card) == 'heart') return 1;
+											if (get.suit(card) == 'diamond') return 2;
+											if (get.suit(card) == 'spade') return 3;
+											if (get.suit(card) == 'club') return 4;
+										});
+									} else {
+										player.unmarkSkill('yuanhunzhansha');
+										event.finish();
+									}
+									'step 2'
+									switch (result.judge) {
+										case 1:
+											player.recover(2);
+											break;
+										case 2:
+											player.draw(2);
+											break;
+										case 3:
+											event.extraDamage = true;
+											break;
+										case 4:
+											player.addMark('xingshenzhiyu', 1);
+											break;
+									}
+									'step 3'
+									if (event.extraDamage) {
+										target.damage(2);
+										event.extraDamage = false;
+									} else {
+										target.damage(1);
+									}
+									'step 4'
+									event.goto(1);
+								},
+								ai: {
+									order: 10,
+									result: {
+										target: function(player, target) {
+											return -1;
+										},
+									},
+								},
+								intro: {
+									content: '对指定目标进行多次连续攻击，攻击次数等于消耗的标记数。',
+								},
+							},
+							
 							lianyu: {
 								enable: "phaseUse",
 								usable: 1,
