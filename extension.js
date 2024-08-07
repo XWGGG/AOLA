@@ -18,26 +18,28 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						character: {
 							"wumianzhiwang": ["male", "ao", 3, ["qian", "lvlicaijue"], ["die_audio"]],
 							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
-							"kaltsit": ["female", "ao","4/4/5", ["mon3ter", "buhui"], ["die_audio"]],
+							"kaltsit": ["female", "ao","1/4/5", ["mon3ter", "buhui"], ["die_audio"]],
 							"xihe": ["female", "ao", 4, ["shiguang", "lishi"], ["die_audio"]],
 							"qiankun": ["male", "ao",3, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
+							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
+							
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
 							qian: "潜",
 							"qian_info": "每次即将受到伤害时，判定一次，若不为黑桃，则此次伤害降至0。",
 							lvlicaijue: "律理裁决",
-							"lvlicaijue_info": "自身每次对攻击目标造成伤害后，令其下一回合跳过摸牌和出牌阶段。",
+							"lvlicaijue_info": "使用杀造成伤害后，令目标停止行动一回合，否则抽取目标一张牌。",
 
 							"kaltsit": "凯尔希",
 							mon3ter: "怪物3",
-							"mon3ter_info": "出牌阶段，选择3张黑色手牌弃置并令一名其他角色失去2点体力，令自己手牌与护甲+1。",
+							"mon3ter_info": "出牌阶段，选择2张黑色手牌弃置并令一名其他角色失去1点体力，令自己手牌与护甲+1。",
 							buhui: "不毁",
 							"buhui_info": "出牌阶段，选择2张红色手牌弃置并回复1点体力，令自己手牌与护甲+1。",
 
 							"liliangwang": "力量王",
 							lilianghuiyao: "力量辉耀",
-							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+2。",
+							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+3，如果技能触发后玩家的体力为单数，则额外恢复1点体力并摸一张牌。",
 							wujianchaoying: "无间超影",
 							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择消耗一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制。",
 
@@ -45,7 +47,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							lishi: "离时",
 							"lishi_info": "上场立刻触发：所有角色每次回合开始时，增加1个离时标记，若标记数量达到或超过12个，清空标记。羲和清空标记时增加体力上限并回满体力值，其他角色则直接死亡。",
 							shiguang: "时光",
-							"shiguang_info": "场上每当有人受伤后，判定一次，若为黑桃，受伤者离时标记+6，否则离时标记+1。",
+							"shiguang_info": "场上每当有人体力值发生变化后，判定一次，若为黑桃，受伤者离时标记+6，否则离时标记+1。",
 
 							"qiankun": "乾坤",
 							shenhuazhuzai: "神化主宰",
@@ -53,6 +55,11 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							qiankunzhen: "乾坤震",
 							"qiankunzhen_info": "直接对目标造成一点伤害，出牌阶段限一次。",
 
+							"hadisi": "哈迪斯",
+							lianyu: "炼狱",
+							"lianyu_info": "出牌阶段限一次：弃掉一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣。",
+							tianzui: "天罪",
+							"tianzui_info": "在出牌阶段限一次使用。弃置一张黑桃花色的手牌，直接吸取目标角色的一点体力值与体力上限。",
 						},
 						skill: {
 							_dieAudioMOU: {
@@ -65,6 +72,95 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (trigger.player.name) game.playAudio('..', 'extension', '奥拉星', trigger.player.name);
 								}
 							},
+
+							lianyu: {
+								enable: "phaseUse",
+								usable: 1,
+								filter: function(event, player) {
+									return player.countCards('h', { suit: 'club' }) > 0;
+								},
+								filterTarget: function(card, player, target) {
+									return player != target;
+								},
+								content: function() {
+									'step 0'
+									player.chooseCard('h', { suit: 'club' }, '请选择一张梅花手牌弃置').set('ai', function(card) {
+										return 6 - get.value(card);
+									});
+									'step 1'
+									if (result.bool) {
+										player.logSkill('lianyu');
+										player.discard(result.cards);
+										target.addMark('lianyu', 1);
+										target.addSkill('lianyu_debuff');
+									}
+								},
+								mark: true,
+								intro: {
+									content: '回血反扣',
+								},
+								subSkill: {
+									debuff: {
+										trigger: { player: 'recoverEnd' },
+										forced: true,
+										filter: function(event, player) {
+											return player.countMark('lianyu') > 0;
+										},
+										content: function() {
+											var loseHpAmount = trigger.num * 2; // 计算双倍扣除的体力值
+											player.removeMark('lianyu', 1);
+											player.loseHp(loseHpAmount);
+											player.removeSkill('lianyu_debuff');
+											if (game.hasPlayer(function(p) {
+												return p.name == 'hadisi';
+											})) {
+												var hadisi = game.findPlayer(function(p) {
+													return p.name == 'hadisi';
+												});
+												hadisi.recover(1);
+											}
+											player.removeSkill('lianyu_debuff');
+										},
+										sub: true,
+									},
+								},
+							},							
+														
+							tianzui: {
+								enable: "phaseUse",
+								usable: 1,
+								filter: function(event, player) {
+									return player.countCards('h', { suit: 'spade' }) > 0;
+								},
+								filterCard: function(card) {
+									return get.suit(card) == 'spade';
+								},
+								check: function(card) {
+									return 6 - get.value(card);
+								},
+								position: 'h',
+								content: function() {
+									'step 0'
+									player.discard(result.cards);
+									player.chooseTarget('选择一名角色吸取其1点体力上限与体力值', function(card, player, target) {
+										return player != target;
+									}).set('ai', function(target) {
+										return -get.attitude(player, target);
+									});
+									'step 1'
+									if (result.bool) {
+										var target = result.targets[0];
+										target.loseHp(1);
+										target.loseMaxHp(1);
+										target.update(); // 即时更新体力上限
+										player.gainMaxHp(1);
+										player.update(); // 即时更新体力上限
+										player.recover(1);
+
+									}
+								},
+							},
+							
 							shenhuazhuzai : {
 								trigger: { player: "phaseBegin" },
 								skillAnimation: true,
@@ -149,7 +245,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								}
 							},							
 							lishi: {
-								trigger: { global: "phaseBefore" },
+								trigger: { global: "phaseBegin" },
 								forced: true,
 								content: function() {
 									var current = trigger.player; // 当前回合角色
@@ -164,7 +260,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							
 										if (current == player) { // 如果当前回合角色是技能拥有者
 											current.gainMaxHp();
-											current.recover(current.maxHp - current.hp);
+											current.update();
+											current.recover(999);
 											current.popup('体力上限+1，体力值回满');
 											game.log(current, '增加了1点体力上限并回满了体力值');
 										} else {
@@ -180,8 +277,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									}
 								},
 							},
+							
 							shiguang: {
-								trigger: { global: "damageEnd" },
+								trigger: { global: "changeHpEnd" },
 								forced: true,
 								content: function() {
 									'step 0'
@@ -217,8 +315,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							lvlicaijue: {
 								trigger: { source: "damageEnd" },
 								filter: function(event, player) {
-									// 确保触发者不是自己，并且目标受到实际伤害（不是护盾吸收的伤害）
-									return event.player != player && event.num > 0 && event.player.hp < event.player.maxHp;
+									return event.player != player && event.num > 0;
 								},
 								direct: true,
 								content: function() {
@@ -228,34 +325,37 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								subSkill: {
 									stop: {
 										trigger: { player: "phaseBegin" },
+										forced: true,
 										content: function() {
 											player.skip("phaseDraw");
 											player.skip("phaseUse");
 											player.removeSkill("lvlicaijue_stop");
 										},
 										sub: true,
-										forced: true,
 									}
-								},
+								}
 							},
-														
+										
 							lilianghuiyao: {
-								trigger: { player: "damageEnd" },
+								trigger: { player: ["damageEnd", "loseHpEnd"] },
 								forced: true,
 								content: function() {
 									'step 0'
 									player.judge(function(card) {
-										return get.color(card);
+										if (get.color(card) == 'black') {
+											player.maxHp += 2;
+											player.update();
+											game.log(player, '的体力上限增加了2');
+										} else if (get.color(card) == 'red') {
+											player.recover(3);
+											game.log(player, '恢复了3点体力');
+										}
 									});
 									'step 1'
-									if (result.color == 'black') {
-										player.maxHp += 2;
-										player.update();
-										game.log(player, '的体力上限增加了2');
-									} else if (result.color == 'red') {
-										var recoverAmount = Math.floor(player.maxHp / 2);
-										player.recover(recoverAmount);
-										game.log(player, '恢复了', recoverAmount, '点体力');
+									if (player.hp % 2 !== 0) {
+										player.recover(1);
+										player.draw();
+										game.log(player, '体力为单数，体力恢复1点并摸一张牌');
 									}
 								},
 							},
@@ -289,9 +389,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											trigger.num *= 2;
 										},
 										mod: {
-											targetInRange: function(card) {
-												if (card.name == 'sha') return true;
-											},
 											cardUsable: function(card, player, num) {
 												if (card.name == 'sha') return Infinity;
 											},
@@ -300,46 +397,46 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									},
 								},
 							},
-							
-										
+																	
 							mon3ter: {
-								trigger: { player: 'phaseUse' },
-								direct: true,
-								filter: function(event, player) {
-									return player.countCards('h', { color: 'black' }) >= 3;
+								enable: "phaseUse",
+								usable: 1,
+								filter: function (event, player) {
+									return player.countCards('h', { color: 'black' }) >= 2;
 								},
-								content: function() {
+								content: function () {
 									'step 0'
-									player.chooseCard('选择3张黑色手牌弃置并令一名其他角色失去2点体力，自己摸1张牌并增加1点护甲', 3, { color: 'black' }).set('ai', function(card) {
+									player.chooseCard('选择2张黑色手牌弃置', 2, { color: 'black' }).set('ai', function (card) {
 										return 6 - get.value(card);
 									});
 									'step 1'
 									if (result.bool) {
-										player.logSkill('mon3ter');
+										player.logSkill('kaltsit');
 										player.discard(result.cards);
-										player.chooseTarget('选择一名角色令其失去2点体力', function(card, player, target) {
-											return player != target;
-										}).set('ai', function(target) {
+										player.chooseTarget('选择一名角色失去2点体力', function (card, player, target) {
+											return target != player;
+										}).set('ai', function (target) {
 											return -get.attitude(player, target);
 										});
 									}
 									'step 2'
 									if (result.bool) {
-										result.targets[0].loseHp(2);
-										player.draw();
+										result.targets[0].loseHp(1);
+										player.draw(1);
 										player.changeHujia(1);
 									}
-								}
+								},
 							},
+							
 							buhui: {
-								trigger: { player: 'phaseUse' },
-								direct: true,
-								filter: function(event, player) {
+								enable: "phaseUse",
+								usable: 1,
+								filter: function (event, player) {
 									return player.countCards('h', { color: 'red' }) >= 2;
 								},
-								content: function() {
+								content: function () {
 									'step 0'
-									player.chooseCard('选择2张红色手牌弃置并回复1点体力，摸1张牌并增加1点护甲', 2, { color: 'red' }).set('ai', function(card) {
+									player.chooseCard('选择2张红色手牌弃置', 2, { color: 'red' }).set('ai', function (card) {
 										return 6 - get.value(card);
 									});
 									'step 1'
@@ -350,8 +447,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										player.draw();
 										player.changeHujia(1);
 									}
-								}
+								},
 							},
+							
 						}
 					};
 					if (lib.device || lib.node) {
