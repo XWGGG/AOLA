@@ -10,8 +10,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						name: "aolaxing",
 						connect: true,
 						characterSort: {
-							奥拉星: {
-								奥拉星: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong"],
+							AOLA: {
+								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong"],
 								其他: []
 							}
 						},
@@ -23,6 +23,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
 							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
 							"shangguxinglong": ["male", "ao",4, ["xingshenzhiyu","yuanhunzhansha"], ["die_audio"]],
+							"feier": ["male", "ao",4, ["xvwutunyan","fenjintianxia"], ["die_audio"]],
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
@@ -67,6 +68,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							yuanhunzhansha: "元魂斩杀",
 							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力；方块：摸两张牌；黑桃：伤害+1；梅花：“星神之域”标记+1",
 
+							"feier": "菲尔",
+							xvwutunyan: "虚无吞炎",
+							"xvwutunyan_info": "受伤后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+2，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
+							fenjintianxia: "焚尽天下",
+							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加2枚“虚无吞炎”标记。",
+
 						},
 						skill: {
 							_dieAudioMOU: {
@@ -76,9 +83,79 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								unique: true,
 								frequent: true,
 								content: function () {
-									if (trigger.player.name) game.playAudio('..', 'extension', '奥拉星', trigger.player.name);
+									if (trigger.player.name) game.playAudio('..', 'extension', 'AOLA', trigger.player.name);
 								}
 							},
+							xvwutunyan: {
+								trigger: { source: 'damageEnd' },
+								forced: true,
+								filter: function(event, player) {
+									return event.player != player;
+								},
+								content: function() {
+									trigger.player.addMark('xvwutunyan', 1);
+									if (!trigger.player.hasSkill('xvwutunyan_effect')) {
+										trigger.player.addSkill('xvwutunyan_effect');
+									}
+								},
+								intro: {
+									content: 'mark',
+								},
+								subSkill: {
+									effect: {
+										trigger: { player: 'phaseBegin' },
+										forced: true,
+										content: function() {
+											player.removeMark('xvwutunyan', 1);
+											player.judge(function(card) {
+												if (get.color(card) == 'red') {
+													player.addMark('xvwutunyan', 2);
+													player.skip('phaseUse');
+												} else {
+													player.loseHp(1);
+													player.skip('phaseDraw');
+												}
+											});
+											if (player.countMark('xvwutunyan') === 0) {
+												player.removeSkill('xvwutunyan_effect');
+											}
+										},
+										sub: true,
+									},
+								},
+							},
+							
+							fenjintianxia: {
+								enable: 'phaseUse',
+								usable: 1,
+								filter: function(event, player) {
+									return player.maxHp > 1;
+								},
+								content: function() {
+									player.loseMaxHp(1);
+									player.recover(player.maxHp - player.hp); // 回满体力
+									game.players.forEach(function(target) {
+										if (target != player) {
+											target.addMark('xvwutunyan', 2);
+											if (!target.hasSkill('xvwutunyan_effect')) {
+												target.addSkill('xvwutunyan_effect');
+											}
+										}
+									});
+								},
+								ai: {
+									order: 10,
+									result: {
+										player: function(player) {
+											return player.maxHp > 1 ? 1 : -1;
+										},
+									},
+								},
+								intro: {
+									content: '消耗1点体力上限，回满体力并给其他所有角色添加2枚“虚无吞炎”标记。',
+								},
+							},
+							
 							xingshenzhiyu: {
 								trigger: { player: 'phaseBegin' },
 								forced: true,
@@ -547,7 +624,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (result.bool) {
 										player.logSkill('kaltsit');
 										player.discard(result.cards);
-										player.chooseTarget('选择一名角色失去2点体力', function (card, player, target) {
+										player.chooseTarget('选择一名角色失去1点体力', function (card, player, target) {
 											return target != player;
 										}).set('ai', function (target) {
 											return -get.attitude(player, target);
@@ -588,22 +665,22 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 					};
 					if (lib.device || lib.node) {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("ext:奥拉星/" + i + ".jpg");
+							aolaxing.character[i][4].push("ext:AOLA/" + i + ".jpg");
 						}
 					}
 					else {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("db:extension-奥拉星:" + i + ".jpg");
+							aolaxing.character[i][4].push("db:extension-AOLA:" + i + ".jpg");
 						}
 					}
 					return aolaxing;
 				});
 				lib.config.all.characters.push("aolaxing");
 				if (!lib.config.characters.contains("aolaxing")) lib.config.characters.push("aolaxing");
-				lib.translate["aolaxing_character_config"] = "奥拉星";
+				lib.translate["aolaxing_character_config"] = "AOLA";
 				lib.config.all.cards.push("aolaxing");
 				if (!lib.config.cards.contains("aolaxing")) lib.config.cards.push("aolaxing");
-				lib.translate["aolaxing_card_config"] = "奥拉星";
+				lib.translate["aolaxing_card_config"] = "AOLA";
 			}
 		}, help: {}, config: {}, package: {
 			character: {
@@ -619,7 +696,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 				skill: {},
 				translate: {}
 			},
-			intro: "可联机的奥拉星武将扩展包，本来是想做明日方舟武将扩展的，于是有了凯尔希，后来还是觉得奥拉星的很多角色机制更有趣一点，于是就改成奥拉星了。",
+			intro: "可联机的AOLA武将扩展包，本来是想做明日方舟武将扩展的，于是有了凯尔希，后来还是觉得AOLA的很多角色机制更有趣一点，于是就改成AOLA了。",
 			author: "潜水群",
 			diskURL: "",
 			forumURL: "",
