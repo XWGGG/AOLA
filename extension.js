@@ -11,7 +11,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							AOLA: {
-								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong"],
+								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong","feier"],
 								其他: []
 							}
 						},
@@ -697,10 +697,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 				translate: {}
 			},
 			intro: "可联机的AOLA武将扩展包，本来是想做明日方舟武将扩展的，于是有了凯尔希，后来还是觉得AOLA的很多角色机制更有趣一点，于是就改成AOLA了。",
-			author: "潜水群",
+			author: "笑纹光",
 			diskURL: "",
 			forumURL: "",
-			version: "1.0.0",
+			version: "1.0.7",
 		}, files: { "character": [], "card": [], "skill": [] }
 	}
 })
