@@ -18,7 +18,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						character: {
 							"wumianzhiwang": ["male", "ao", 3, ["qian", "lvlicaijue"], ["die_audio"]],
 							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
-							"kaltsit": ["female", "群","2/4/2", ["mon3ter", "buhui"], ["die_audio"]],
+							"kaltsit": ["female", "qun","2/4/2", ["mon3ter", "buhui"], ["die_audio"]],
 							"xihe": ["female", "ao", 3, ["shiguang", "lishi"], ["die_audio"]],
 							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
 							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
@@ -797,9 +797,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 				lib.config.all.characters.push("aolaxing");
 				if (!lib.config.characters.contains("aolaxing")) lib.config.characters.push("aolaxing");
 				lib.translate["aolaxing_character_config"] = "AOLA";
-				lib.config.all.cards.push("aolaxing");
-				if (!lib.config.cards.contains("aolaxing")) lib.config.cards.push("aolaxing");
-				lib.translate["aolaxing_card_config"] = "AOLA";
 			}
 		}, help: {}, config: {}, package: {
 			character: {
