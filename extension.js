@@ -318,7 +318,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											return player.countMark('lianyu') > 0;
 										},
 										content: function() {
-											var loseHpAmount = trigger.num * 2; // 计算双倍扣除的体力值
+											var loseHpAmount = trigger.num * 2;
 											player.removeMark('lianyu', 1);
 											player.loseHp(loseHpAmount);
 											player.removeSkill('lianyu_debuff');
@@ -335,8 +335,23 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										sub: true,
 									},
 								},
-							},							
-														
+								ai: {
+									order: 7,
+									result: {
+										player: function(player) {
+											// AI 判断是否使用技能的逻辑
+											if (player.countCards('h', { suit: 'club' }) > 0) {
+												return 1; // 返回正数表示倾向于使用
+											}
+											return 0; // 返回 0 表示不使用
+										},
+										target: function(player, target) {
+											return -1; // AI 选择态度不好的目标
+										}
+									}
+								}
+							},
+							
 							tianzui: {
 								enable: "phaseUse",
 								usable: 1,
@@ -363,96 +378,131 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										var target = result.targets[0];
 										target.loseHp(1);
 										target.loseMaxHp(1);
-										target.update(); // 即时更新体力上限
+										target.update();
 										player.gainMaxHp(1);
-										player.update(); // 即时更新体力上限
+										player.update();
 										player.recover(1);
-
 									}
 								},
+								ai: {
+									order: 7,
+									result: {
+										player: function(player) {
+											// AI 判断是否使用技能的逻辑
+											if (player.countCards('h', { suit: 'spade' }) > 0) {
+												return 1; // 返回正数表示倾向于使用
+											}
+											return 0; // 返回 0 表示不使用
+										},
+										target: function(player, target) {
+											return -1; // AI 选择态度不好的目标
+										}
+									}
+								}
 							},
 							
-							shenhuazhuzai : {
+							shenhuazhuzai: {
 								trigger: { player: "phaseBegin" },
 								skillAnimation: true,
 								animationColor: "orange",
 								filter: function (event, player) {
-									return !player.storage.shenhuazhuzai;
+								  return !player.storage.shenhuazhuzai;
 								},
 								content: function () {
-									player.awakenSkill('shenhuazhuzai');
-									player.storage.shenhuazhuzai = true;
-									player.addSkill('shenhuazhuzai_damageBoost');
-									player.addSkill('shenhuazhuzai_healOnDamage');
-									player.addSkill('shenhuazhuzai_endEffects'); // 添加计时器子技能
-									player.maxHp *= 2;
-									player.update();
-									player.storage.shenhuazhuzai_turns = 0; // 初始化回合计数为0
-									player.markSkill('shenhuazhuzai');
-									player.skip('phaseDraw');
-									player.skip('phaseUse');
+								  player.awakenSkill('shenhuazhuzai');
+								  player.storage.shenhuazhuzai = true;
+								  player.addSkill('shenhuazhuzai_damageBoost');
+								  player.addSkill('shenhuazhuzai_healOnDamage');
+								  player.addSkill('shenhuazhuzai_endEffects');
+								  player.maxHp *= 2;
+								  player.update();
+								  player.storage.shenhuazhuzai_turns = 0;
+								  player.markSkill('shenhuazhuzai');
+								  player.skip('phaseDraw');
+								  player.skip('phaseUse');
 								},
 								subSkill: {
-									damageBoost: {
-										trigger: { source: "damageBefore" },
-										filter: function (event, player) { return event.source === player; },
-										forced: true,
-										content: function () {
-											trigger.num += 1;
-										},
-										sub: true,
+								  damageBoost: {
+									trigger: { source: "damageBefore" },
+									filter: function (event, player) { return event.source === player; },
+									forced: true,
+									content: function () {
+									  trigger.num += 1;
 									},
-									healOnDamage: {
-										trigger: { source: "damageBegin" },
-										filter: function (event, player) { return event.source === player && player.hp < player.maxHp; },
-										forced: true,
-										content: function () {
-											var damage = trigger.num; // 获取造成的伤害
-											player.recover(damage); // 将伤害值用于体力回复
-										},
-										sub: true,
+									sub: true,
+								  },
+								  healOnDamage: {
+									trigger: { source: "damageBegin" },
+									filter: function (event, player) { return event.source === player && player.hp < player.maxHp; },
+									forced: true,
+									content: function () {
+									  var damage = trigger.num;
+									  player.recover(damage);
 									},
-									endEffects: {
-										trigger: { player: "phaseEnd" },
-										filter: function (event, player) {
-											return player.storage.shenhuazhuzai; // 仅在技能激活时触发
-										},
-										forced: true,
-										content: function () {
-											player.storage.shenhuazhuzai_turns += 1; // 增加回合计数
-											if (player.storage.shenhuazhuzai_turns >= 3) {
-												player.removeSkill('shenhuazhuzai_damageBoost'); // 移除子技能
-												player.removeSkill('shenhuazhuzai_healOnDamage'); // 移除子技能
-												player.maxHp /= 2; // 恢复体力上限
-												player.update();
-												player.storage.shenhuazhuzai = false; // 禁用主技能
-												player.removeSkill('shenhuazhuzai_endEffects'); // 移除计时器子技能
-												player.unmarkSkill('shenhuazhuzai');
-												player.addMark('shenhua', 1); // 添加“神化”标记
-											}
-										},
-										sub: true,
+									sub: true,
+								  },
+								  endEffects: {
+									trigger: { player: "phaseEnd" },
+									filter: function (event, player) {
+									  return player.storage.shenhuazhuzai;
 									},
+									forced: true,
+									content: function () {
+									  player.storage.shenhuazhuzai_turns += 1;
+									  if (player.storage.shenhuazhuzai_turns >= 3) {
+										player.removeSkill('shenhuazhuzai_damageBoost');
+										player.removeSkill('shenhuazhuzai_healOnDamage');
+										player.maxHp /= 2;
+										player.update();
+										player.storage.shenhuazhuzai = false;
+										player.removeSkill('shenhuazhuzai_endEffects');
+										player.unmarkSkill('shenhuazhuzai');
+										player.addMark('shenhua', 1);
+									  }
+									},
+									sub: true,
+								  },
 								},
 								mark: true,
 								intro: {
-									content: function(storage, player) {
-										if (player.storage.shenhuazhuzai_turns !== undefined) {
-											return '当前神化状态剩余回合数：' + (3 - player.storage.shenhuazhuzai_turns);
-										}
-										return '神化状态下：体力上限翻倍，攻击造成的伤害+1，且等额回复';
+								  content: function(storage, player) {
+									if (player.storage.shenhuazhuzai_turns !== undefined) {
+									  return '当前神化状态剩余回合数：' + (3 - player.storage.shenhuazhuzai_turns);
 									}
+									return '神化状态下：体力上限翻倍，攻击造成的伤害+1，且等额回复';
+								  }
 								},
 								init: (player, skill) => player.storage[skill] = false,
-							},			
+								ai: {
+								  order: 5,
+								  result: {
+									player: function(player) {
+									  return player.hp < player.maxHp / 2 ? 10 : 0;
+									}
+								  },
+								  threaten: 1.2,
+								  expose: 0.4,
+								}
+							},
+									  
 							qiankunzhen: {
 								enable: "phaseUse",
 								usable: 1,
 								filterTarget: function (card, player, target) {
-									return player != target;
+								  return player != target;
 								},
 								content: function () {
-									target.damage();
+								  target.damage();
+								},
+								ai: {
+								  order: 9,
+								  result: {
+									target: function(player, target) {
+									  return -1 * (target.hp + target.maxHp);
+									}
+								  },
+								  threaten: 2,
+								  expose: 0.4,
 								}
 							},							
 							lishi: {
@@ -550,6 +600,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							lilianghuiyao: {
 								trigger: { player: ["damageEnd", "loseHpEnd"] },
 								forced: true,
+								filter: function (event, player) {
+									return !player.storage.lilianghuiyao_used;
+								},
 								content: function() {
 									'step 0'
 									player.judge(function(card) {
@@ -568,8 +621,25 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										player.draw();
 										game.log(player, '体力为单数，体力恢复1点并摸一张牌');
 									}
+									player.storage.lilianghuiyao_used = true; // 设置标志，表示本回合已经使用过
+								},
+								group: ['lilianghuiyao_reset'],
+								subSkill: {
+									reset: {
+										trigger: { player: 'phaseBegin' },
+										forced: true,
+										popup: false,
+										content: function() {
+											player.storage.lilianghuiyao_used = false; // 在回合开始时重置标志
+										},
+										sub: true,
+									},
+								},
+								init: function(player) {
+									player.storage.lilianghuiyao_used = false; // 初始化标志
 								},
 							},
+							
 							
 							wujianchaoying: {
 								enable: "phaseUse",
@@ -580,13 +650,33 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								content: function() {
 									'step 0'
 									player.chooseBool('是否消耗一半的体力值以在本回合内造成的伤害翻倍并解除杀的使用限制？').ai = function() {
-										return true;
+										// AI 判断是否使用技能的逻辑
+										if (player.hp > 2 && game.hasPlayer(function(current) {
+											return get.attitude(player, current) < 0;
+										})) {
+											return true;
+										}
+										return false;
 									};
 									'step 1'
 									if (result.bool) {
 										player.loseHp(Math.floor(player.hp / 2));
 										player.addTempSkill('wujianchaoying_effect', {player: 'phaseEnd'});
 										game.log(player, '消耗了一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制');
+									}
+								},
+								ai: {
+									order: 8, // 技能的优先级
+									result: {
+										player: function(player) {
+											// AI 判断是否使用技能的逻辑
+											if (player.hp > 2 && game.hasPlayer(function(current) {
+												return get.attitude(player, current) < 0;
+											})) {
+												return 1; // 返回正数表示倾向于使用
+											}
+											return 0; // 返回 0 表示不使用
+										}
 									}
 								},
 								subSkill: {
@@ -608,25 +698,26 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									},
 								},
 							},
+							
 																	
 							mon3ter: {
 								enable: "phaseUse",
 								usable: 1,
-								filter: function (event, player) {
+								filter: function(event, player) {
 									return player.countCards('h', { color: 'black' }) >= 2;
 								},
-								content: function () {
+								content: function() {
 									'step 0'
-									player.chooseCard('选择2张黑色手牌弃置', 2, { color: 'black' }).set('ai', function (card) {
+									player.chooseCard('选择2张黑色手牌弃置', 2, { color: 'black' }).set('ai', function(card) {
 										return 6 - get.value(card);
 									});
 									'step 1'
 									if (result.bool) {
 										player.logSkill('kaltsit');
 										player.discard(result.cards);
-										player.chooseTarget('选择一名角色失去1点体力', function (card, player, target) {
+										player.chooseTarget('选择一名角色失去1点体力', function(card, player, target) {
 											return target != player;
-										}).set('ai', function (target) {
+										}).set('ai', function(target) {
 											return -get.attitude(player, target);
 										});
 									}
@@ -637,17 +728,32 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										player.changeHujia(1);
 									}
 								},
+								ai: {
+									order: 7, // 技能的优先级
+									result: {
+										player: function(player) {
+											// AI 判断是否使用技能的逻辑
+											if (player.countCards('h', { color: 'black' }) >= 2) {
+												return 1; // 返回正数表示倾向于使用
+											}
+											return 0; // 返回 0 表示不使用
+										},
+										target: function(player, target) {
+											return -1; // AI 选择态度不好的目标
+										}
+									}
+								}
 							},
 							
 							buhui: {
 								enable: "phaseUse",
 								usable: 1,
-								filter: function (event, player) {
+								filter: function(event, player) {
 									return player.countCards('h', { color: 'red' }) >= 2;
 								},
-								content: function () {
+								content: function() {
 									'step 0'
-									player.chooseCard('选择2张红色手牌弃置', 2, { color: 'red' }).set('ai', function (card) {
+									player.chooseCard('选择2张红色手牌弃置', 2, { color: 'red' }).set('ai', function(card) {
 										return 6 - get.value(card);
 									});
 									'step 1'
@@ -659,7 +765,20 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										player.changeHujia(1);
 									}
 								},
+								ai: {
+									order: 6, // 技能的优先级
+									result: {
+										player: function(player) {
+											// AI 判断是否使用技能的逻辑
+											if (player.countCards('h', { color: 'red' }) >= 2) {
+												return 1; // 返回正数表示倾向于使用
+											}
+											return 0; // 返回 0 表示不使用
+										}
+									}
+								}
 							},
+							
 							
 						}
 					};
