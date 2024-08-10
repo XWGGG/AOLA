@@ -11,7 +11,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							AOLA: {
-								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong","feier"],
+								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong","feier",],
 								其他: []
 							}
 						},
@@ -70,7 +70,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"feier": "菲尔",
 							xvwutunyan: "虚无吞炎",
-							"xvwutunyan_info": "受伤后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+2，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
+							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+2，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
 							fenjintianxia: "焚尽天下",
 							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加2枚“虚无吞炎”标记。",
 
@@ -86,6 +86,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									if (trigger.player.name) game.playAudio('..', 'extension', 'AOLA', trigger.player.name);
 								}
 							},
+							
 							xvwutunyan: {
 								trigger: { source: 'damageEnd' },
 								forced: true,
@@ -124,7 +125,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									},
 								},
 							},
-							
+
 							fenjintianxia: {
 								enable: 'phaseUse',
 								usable: 1,
