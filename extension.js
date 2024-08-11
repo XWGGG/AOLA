@@ -505,7 +505,8 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								  threaten: 2,
 								  expose: 0.4,
 								}
-							},							
+							},
+														
 							lishi: {
 								trigger: { global: "phaseBegin" },
 								forced: true,
@@ -640,8 +641,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									player.storage.lilianghuiyao_used = false; // 初始化标志
 								},
 							},
-							
-							
+														
 							wujianchaoying: {
 								enable: "phaseUse",
 								usable: 1,
@@ -699,8 +699,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									},
 								},
 							},
-							
-																	
+																								
 							mon3ter: {
 								enable: "phaseUse",
 								usable: 1,
