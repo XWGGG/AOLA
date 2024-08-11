@@ -1,6 +1,6 @@
 game.import("extension", function (lib, game, ui, get, ai, _status) {
 	return {
-		name: "奥拉星", content: function (config, pack) {
+		name: "AOLA", content: function (config, pack) {
 			lib.group.push("ao");
 			lib.translate["ao"] = "奥";
 		}, precontent: function (ext) {
@@ -16,12 +16,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							}
 						},
 						character: {
-							"wumianzhiwang": ["male", "ao", 3, ["qian", "lvlicaijue"], ["die_audio"]],
+							"wumianzhiwang": ["male", "ao", 4, ["qian", "lvlicaijue"], ["die_audio"]],
 							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
 							"kaltsit": ["female", "qun","2/4/2", ["mon3ter", "buhui"], ["die_audio"]],
-							"xihe": ["female", "ao", 3, ["shiguang", "lishi"], ["die_audio"]],
+							"xihe": ["female", "ao", 4, ["shiguang", "lishi"], ["die_audio"]],
 							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
-							"hadisi": ["male", "ao",3, ["lianyu", "tianzui"], ["die_audio"]],
+							"hadisi": ["male", "ao",4, ["lianyu", "tianzui"], ["die_audio"]],
 							"shangguxinglong": ["male", "ao",4, ["xingshenzhiyu","yuanhunzhansha"], ["die_audio"]],
 							"feier": ["male", "ao",4, ["xvwutunyan","fenjintianxia"], ["die_audio"]],
 						},
@@ -58,7 +58,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"hadisi": "哈迪斯",
 							lianyu: "炼狱",
-							"lianyu_info": "出牌阶段限一次：弃掉一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣。",
+							"lianyu_info": "出牌阶段限一次：弃掉一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣，且使哈迪斯体力+2。",
 							tianzui: "天罪",
 							"tianzui_info": "在出牌阶段限一次使用。弃置一张黑桃花色的手牌，直接吸取目标角色的一点体力值与体力上限。",
 
@@ -66,11 +66,11 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							xingshenzhiyu: "星神之域",
 							"xingshenzhiyu_info": "每回合开始时获得1枚“星神之域”标记，受伤前，可以选择消耗1个标记来抵消此次伤害。",
 							yuanhunzhansha: "元魂斩杀",
-							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力；方块：摸两张牌；黑桃：伤害+1；梅花：“星神之域”标记+1",
+							"yuanhunzhansha_info": "消耗N枚“星神之域”标记，并进行多次连续攻击N次，每次攻击造成1点伤害，且进行判定，红桃：恢复1点体力；方块：手牌+1；黑桃：伤害+1；梅花：“星神之域”标记+1",
 
 							"feier": "菲尔",
 							xvwutunyan: "虚无吞炎",
-							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+2，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
+							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+1，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
 							fenjintianxia: "焚尽天下",
 							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加2枚“虚无吞炎”标记。",
 
@@ -110,7 +110,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											player.removeMark('xvwutunyan', 1);
 											player.judge(function(card) {
 												if (get.color(card) == 'red') {
-													player.addMark('xvwutunyan', 2);
+													player.addMark('xvwutunyan', 1);
 													player.skip('phaseUse');
 												} else {
 													player.loseHp(1);
@@ -236,7 +236,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											player.recover();
 											break;
 										case 2:
-											player.draw(2);
+											player.draw();
 											break;
 										case 3:
 											event.extraDamage = true;
@@ -329,7 +329,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 												var hadisi = game.findPlayer(function(p) {
 													return p.name == 'hadisi';
 												});
-												hadisi.recover(1);
+												hadisi.recover(2);
 											}
 											player.removeSkill('lianyu_debuff');
 										},
