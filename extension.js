@@ -22,11 +22,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"hadisi": ["male", "ao",4, ["lianyu", "tianzui"], ["die_audio"]],
 							"shangguxinglong": ["male", "ao",4, ["xingshenzhiyu","yuanhunzhansha"], ["die_audio"]],
 							"feier": ["male", "ao",4, ["xvwutunyan","fenjintianxia"], ["die_audio"]],
+							"tiandaowuji": ["male", "ao",4, ["liangyipingheng","yinyangwushuang"], ["die_audio"]],
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
 							qian: "潜",
-							"qian_info": "每次受到伤害时，判定一次，若此牌的点数小于9，则免除此次伤害。",
+							"qian_info": "每次受到伤害时，判定一次，若此牌的点数小于10，则免除此次伤害。",
 							lvlicaijue: "律理裁决",
 							"lvlicaijue_info": "当你对目标造成伤害后，令目标停止行动一回合。",
 
@@ -59,6 +60,14 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”：回合开始后判定一次，若为红色:虚无吞炎标记+1，且跳过摸牌阶段;黑色：则失去1点体力，且跳过出牌阶。",
 							fenjintianxia: "焚尽天下",
 							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加1枚“虚无吞炎”标记。",
+
+							"tiandaowuji": "天道无极",
+							liangyipingheng: "两仪平衡",
+							"liangyipingheng_info": "回合结束时，令自身的手牌与体力值，补齐至全场最高。",
+							yinyangwushuang: "阴阳无双",
+							"yinyangwushuang_info": "出牌阶段，可选择消耗1点体力或者1张手牌，令自身获得2回合的伤害+1或者受伤-1效果。",
+
+
 						},
 						skill: {
 							_dieAudioMOU: {
@@ -72,6 +81,108 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										game.playAudio('..', 'extension', 'AOLA', 'audio', 'death', trigger.player.name); // 更新后的音频路径
 								}
 							},
+
+							liangyipingheng: {
+								trigger: { player: 'phaseEnd' },
+								forced: true,
+								content: function() {
+									var maxHandcards = game.players.reduce((max, p) => Math.max(max, p.countCards('h')), 0);
+									var maxHp = game.players.reduce((max, p) => Math.max(max, p.hp), 0);
+									
+									var handcardsToDraw = maxHandcards - player.countCards('h');
+									var hpToRecover = maxHp - player.hp;
+									
+									if (handcardsToDraw > 0) player.draw(handcardsToDraw);
+									if (hpToRecover > 0) player.recover(hpToRecover);
+								},
+							},
+
+							yinyangwushuang: {
+								enable: 'phaseUse',
+								usable: 1,
+								filter: function(event, player) {
+									return player.hp > 1 || player.countCards('h') > 0;
+								},
+								content: function() {
+									'step 0'
+									player.chooseControl(['体力-1', '手牌-1']).set('prompt', '选择消耗方式：');
+									'step 1'
+									if (result.control == '体力-1') {
+										player.loseHp(1);
+									} else {
+										player.chooseToDiscard(1, true);
+									}
+									'step 2'
+									player.chooseControl(['伤害+1', '受伤-1']).set('prompt', '选择获得效果：');
+									'step 3'
+									if (result.control == '伤害+1') {
+										player.addSkill('yinyangwushuang_damageBoost');
+										player.storage.yangwushuang_turns = 2;  // 记录回合数
+									} else {
+										player.addSkill('yinyangwushuang_damageReduction');
+									}
+									player.addSkill('yinyangwushuang_endEffects');  // 添加结束效果
+									player.storage.yinwushuang_turns = 2;  // 记录回合数
+								},
+								subSkill: {
+									damageBoost: {
+										trigger: { source: "damageBefore" },
+										filter: function(event, player) {
+											return event.source === player;
+										},
+										forced: true,
+										content: function() {
+											trigger.num += 1;
+										},
+										mark: true,
+										marktext: '阳',
+										intro: {
+											content: function(storage, player) {
+												return '当前伤害+1效果剩余回合数：' + player.storage.yangwushuang_turns;
+											},
+										},
+										sub: true,
+									},
+									damageReduction: {
+										trigger: { player: "damageBefore" },
+										filter: function(event, player) {
+											return event.player === player;
+										},
+										forced: true,
+										content: function() {
+											trigger.num -= 1;
+										},
+										mark: true,
+										marktext: '阴',
+										intro: {
+											content: function(storage, player) {
+												return '当前受伤-1效果剩余回合数：' + player.storage.yinwushuang_turns;
+											},
+										},
+										sub: true,
+									},
+									endEffects: {
+										trigger: { player: "phaseAfter" },
+										forced: true,
+										content: function() {
+											if (player.storage.yinwushuang_turns > 0) {
+												player.storage.yinwushuang_turns -= 1;
+											}
+											if (player.storage.yangwushuang_turns > 0) {
+												player.storage.yangwushuang_turns -= 1;
+											}
+											if (player.storage.yangwushuang_turns <= 0) {
+												player.removeSkill('yinyangwushuang_damageBoost');
+											}
+											if (player.storage.yinwushuang_turns <= 0) {
+												player.removeSkill('yinyangwushuang_damageReduction');
+											}
+										},
+										sub: true,
+									},
+								},
+							},
+							
 							qian: {
 								audio: "ext:AOLA/audio/skill/qian.mp3",
 								trigger: { 
@@ -84,14 +195,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								content: function() {
 									"step 0"
 									player.judge(function(card) {
-										return get.number(card)< 9; // 判定牌的点数是否小于9
+										return get.number(card)< 10; // 判定牌的点数是否小于10
 									});
 							
 									"step 1"
 									if (result.bool) {
-										trigger.num = 0; // 如果点数小于9，取消此次攻击的伤害
-										var chat = ['无效！'].randomGet();
-												player.say(chat);
+										trigger.num = 0; // 如果点数小于10，取消此次攻击的伤害
 									}
 								},
 							},
