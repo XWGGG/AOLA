@@ -83,6 +83,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 
 							liangyipingheng: {
+								audio: "ext:AOLA/audio/skill/liangyipingheng.mp3",
 								trigger: { player: 'phaseEnd' },
 								forced: true,
 								content: function() {
@@ -98,6 +99,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 
 							yinyangwushuang: {
+								audio: "ext:AOLA/audio/skill/yinyangwushuang.mp3",
 								enable: 'phaseUse',
 								usable: 1,
 								filter: function(event, player) {
@@ -120,9 +122,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										player.storage.yangwushuang_turns = 2;  // 记录回合数
 									} else {
 										player.addSkill('yinyangwushuang_damageReduction');
+										player.storage.yinwushuang_turns = 2;  // 记录回合数
 									}
 									player.addSkill('yinyangwushuang_endEffects');  // 添加结束效果
-									player.storage.yinwushuang_turns = 2;  // 记录回合数
+
 								},
 								subSkill: {
 									damageBoost: {
@@ -232,6 +235,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 																					
 							xvwutunyan: {
+								audio: "ext:AOLA/audio/skill/xvwutunyan.mp3",
 								trigger: { source: 'damageEnd' },
 								forced: true,
 								filter: function(event, player) {
@@ -271,6 +275,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 
 							fenjintianxia: {
+								audio: "ext:AOLA/audio/skill/fenjintianxia.mp3",
 								enable: 'phaseUse',
 								usable: 1,
 								filter: function(event, player) {
@@ -302,6 +307,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							
 							xingshenzhiyu: {
+								audio: "ext:AOLA/audio/skill/xingshenzhiyu.mp3",
 								trigger: { player: 'phaseBegin' },
 								forced: true,
 								mark: true,
@@ -347,6 +353,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							
 							yuanhunzhansha: {
+								audio: "ext:AOLA/audio/skill/yuanhunzhansha.mp3",
 								enable: 'phaseUse',
 								filter: function(event, player) {
 									return player.countMark('xingshenzhiyu') >= 3;
@@ -430,6 +437,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 														
 							lianyu: {
+								audio: "ext:AOLA/audio/skill/lianyu.mp3",
 								enable: "phaseUse",
 								usable: 1,
 								filter: function(event, player) {
@@ -498,6 +506,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							
 							tianzui: {
+								audio: "ext:AOLA/audio/skill/tianzui.mp3",
 								enable: "phaseUse",
 								usable: 1,
 								filter: function(event, player) {
@@ -547,6 +556,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							
 							shenhuazhuzai: {
+								audio: "ext:AOLA/audio/skill/shenhuazhuzai.mp3",
 								trigger: { player: "phaseBegin" },
 								skillAnimation: true,
 								animationColor: "orange",
@@ -631,6 +641,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 									  
 							qiankunzhen: {
+								audio: "ext:AOLA/audio/skill/qiankunzhen.mp3",
 								enable: "phaseUse",
 								usable: 1,
 								filterTarget: function (card, player, target) {
@@ -652,6 +663,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 														
 							lishi: {
+								audio: "ext:AOLA/audio/skill/lishi.mp3",
 								trigger: { global: "phaseBegin" },
 								forced: true,
 								content: function() {
@@ -686,6 +698,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							},
 							
 							shiguang: {
+								audio: "ext:AOLA/audio/skill/shiguang.mp3",
 								trigger: { global: "changeHpEnd" },
 								forced: true,
 								content: function() {
