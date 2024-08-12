@@ -56,7 +56,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"feier": "菲尔",
 							xvwutunyan: "虚无吞炎",
-							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”：回合开始后判定一次，若为红色:虚无吞炎标记+1，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
+							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”：回合开始后判定一次，若为红色:虚无吞炎标记+1，且跳过摸牌阶段;黑色：则失去1点体力，且跳过出牌阶。",
 							fenjintianxia: "焚尽天下",
 							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加1枚“虚无吞炎”标记。",
 						},
@@ -146,10 +146,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 											player.judge(function(card) {
 												if (get.color(card) == 'red') {
 													player.addMark('xvwutunyan', 1);
-													player.skip('phaseUse');
+													player.skip('phaseDraw');
 												} else {
 													player.loseHp(1);
-													player.skip('phaseDraw');
+													player.skip('phaseUse');													
 												}
 											});
 											if (player.countMark('xvwutunyan') === 0) {
@@ -595,9 +595,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 										game.log(trigger.player, '获得了1个离时标记，当前离时标记数量：', trigger.player.countMark('lishi'));
 									}
 								},
-							},
-
-							
+							},							
 							
 						}
 					};
