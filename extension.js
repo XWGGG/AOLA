@@ -11,14 +11,12 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							AOLA: {
-								AOLA: ["wumianzhiwang", "liliangwang", "kaltsit", "xihe", "qiankun","shangguxinglong","feier",],
+								AOLA: ["wumianzhiwang", "xihe", "qiankun","shangguxinglong","feier",],
 								其他: []
 							}
 						},
 						character: {
 							"wumianzhiwang": ["male", "ao", 4, ["qian", "lvlicaijue"], ["die_audio"]],
-							"liliangwang": ["male", "ao", 4, ["lilianghuiyao","wujianchaoying"],["die_audio"]],
-							"kaltsit": ["female", "qun","2/4/2", ["mon3ter", "buhui"], ["die_audio"]],
 							"xihe": ["female", "ao", 4, ["shiguang", "lishi"], ["die_audio"]],
 							"qiankun": ["male", "ao",4, ["shenhuazhuzai", "qiankunzhen"], ["die_audio"]],
 							"hadisi": ["male", "ao",4, ["lianyu", "tianzui"], ["die_audio"]],
@@ -28,27 +26,15 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						translate: {
 							"wumianzhiwang": "无冕之王",
 							qian: "潜",
-							"qian_info": "每次即将受到伤害时，判定一次，若不为黑桃，则此次伤害降至0。",
+							"qian_info": "每次受到伤害时，判定一次，若此牌的点数小于9，则免除此次伤害。",
 							lvlicaijue: "律理裁决",
 							"lvlicaijue_info": "当你对目标造成伤害后，令目标停止行动一回合。",
-
-							"kaltsit": "凯尔希",
-							mon3ter: "怪物3",
-							"mon3ter_info": "出牌阶段，选择2张黑色手牌弃置并令一名其他角色失去1点体力，令自己手牌与护甲+1。",
-							buhui: "不毁",
-							"buhui_info": "出牌阶段，选择2张红色手牌弃置并回复1点体力，令自己手牌与护甲+1。",
-
-							"liliangwang": "力量王",
-							lilianghuiyao: "力量辉耀",
-							"lilianghuiyao_info": "受到伤害时，判定一次，黑色体力上限+2，红色体力值+2，如果技能触发后玩家的体力为单数，则额外恢复1点体力并摸一张牌。",
-							wujianchaoying: "无间超影",
-							"wujianchaoying_info": "出牌阶段，若当前体力值为双数，可选择消耗一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制。",
 
 							"xihe": "羲和",
 							lishi: "离时",
 							"lishi_info": "上场立刻触发：所有角色每次回合开始时，增加1个离时标记，若标记数量达到或超过12个，清空标记。羲和清空标记时增加体力上限并回满体力值，其他角色则直接死亡。",
 							shiguang: "时光",
-							"shiguang_info": "场上每当有人体力值发生变化后，判定一次，若为黑桃，此人离时标记+6，否则离时标记+1。",
+							"shiguang_info": "场上每当有人体力值发生变化后，判定一次，若为黑桃，离时标记+6，否则离时标记+1。",
 
 							"qiankun": "乾坤",
 							shenhuazhuzai: "神化主宰",
@@ -58,9 +44,9 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"hadisi": "哈迪斯",
 							lianyu: "炼狱",
-							"lianyu_info": "出牌阶段限一次：弃掉一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣，且使哈迪斯体力+2。",
+							"lianyu_info": "出牌阶段限一次：弃置一张梅花牌，指定一名玩家，令其获得一枚炼狱标记，使其下一次回血反扣的同时哈迪斯体力+2。",
 							tianzui: "天罪",
-							"tianzui_info": "在出牌阶段限一次使用。弃置一张黑桃花色的手牌，直接吸取目标角色的一点体力值与体力上限。",
+							"tianzui_info": "在出牌阶段限一次：弃置一张黑桃花色的手牌，直接吸取目标角色的一点体力值与体力上限。",
 
 							"shangguxinglong": "上古星龙",
 							xingshenzhiyu: "星神之域",
@@ -70,23 +56,72 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"feier": "菲尔",
 							xvwutunyan: "虚无吞炎",
-							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”标记，拥有虚无吞炎标记的角色回合开始时会自动消耗一枚虚无吞炎标记进行一次判定，若为红色，虚无吞炎标记+1，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
+							"xvwutunyan_info": "攻击造成伤害后，令伤害来源获得1枚“虚无吞炎”：回合开始后判定一次，若为红色:虚无吞炎标记+1，且跳过出牌阶段。黑色：则失去1点体力，且跳过摸牌阶段。",
 							fenjintianxia: "焚尽天下",
-							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加2枚“虚无吞炎”标记。",
-
+							"fenjintianxia_info": "出牌阶段，可以选择消耗自身一点体力上限，让自身体力值回满，并对全场叠加1枚“虚无吞炎”标记。",
 						},
 						skill: {
 							_dieAudioMOU: {
-								trigger: { global: 'dieBegin', },
-								priority: 2,
-								forced: true,
-								unique: true,
-								frequent: true,
-								content: function () {
-									if (trigger.player.name) game.playAudio('..', 'extension', 'AOLA', trigger.player.name);
+								trigger: { global: 'dieBegin', },  // 触发条件为全局事件 'dieBegin'
+								priority: 2,                        // 触发优先级设为2
+								forced: true,                       // 强制触发
+								unique: true,                       // 独特触发，不允许重复触发
+								frequent: true,                     // 频繁触发，可能在短时间内多次触发
+								content: function () {              // 触发时执行的函数
+									if (trigger.player.name)        // 如果触发事件的玩家有名字
+										game.playAudio('..', 'extension', 'AOLA', 'audio', 'death', trigger.player.name); // 更新后的音频路径
 								}
 							},
+							qian: {
+								audio: "ext:AOLA/audio/skill/qian.mp3",
+								trigger: { 
+									player: "damageBegin" 
+								},
+								forced: true,
+								filter: function (event, player) {
+									return event.num > 0; // 只在攻击有效时触发
+								},
+								content: function() {
+									"step 0"
+									player.judge(function(card) {
+										return get.number(card)< 9; // 判定牌的点数是否小于9
+									});
 							
+									"step 1"
+									if (result.bool) {
+										trigger.num = 0; // 如果点数小于9，取消此次攻击的伤害
+										var chat = ['无效！'].randomGet();
+												player.say(chat);
+									}
+								},
+							},
+														
+							lvlicaijue: {									
+								forced: true,							
+								trigger: { source: "damageEnd" },
+								filter: function(event, player) {
+									return event.player != player && event.num > 0;
+								},
+								direct: true,
+								content: function() {
+									var target = trigger.player;
+									target.addSkill("lvlicaijue_stop");
+								},
+								subSkill: {									
+									stop: {
+										audio:"ext:AOLA/audio/skill/lvlicaijue.mp3",
+										trigger: { player: "phaseBegin" },
+										forced: true,
+										content: function() {
+											player.skip("phaseDraw");
+											player.skip("phaseUse");
+											player.removeSkill("lvlicaijue_stop");
+										},
+										sub: true,
+									}
+								}
+							},
+																					
 							xvwutunyan: {
 								trigger: { source: 'damageEnd' },
 								forced: true,
@@ -137,7 +172,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									player.recover(player.maxHp - player.hp); // 回满体力
 									game.players.forEach(function(target) {
 										if (target != player) {
-											target.addMark('xvwutunyan', 2);
+											target.addMark('xvwutunyan', 1);
 											if (!target.hasSkill('xvwutunyan_effect')) {
 												target.addSkill('xvwutunyan_effect');
 											}
@@ -561,235 +596,19 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 									}
 								},
 							},
-							qian: {
-								trigger: { player: "damageBegin" },
-								forced: true,
-								content: function() {
-									'step 0'
-									player.judge(function(card) {
-										return get.suit(card) !== 'spade';
-									});
-									'step 1'
-									if (result.bool) {
-										trigger.num = 0;
-									}
-								},
-							},
-							lvlicaijue: {
-								trigger: { source: "damageEnd" },
-								filter: function(event, player) {
-									return event.player != player && event.num > 0;
-								},
-								direct: true,
-								content: function() {
-									var target = trigger.player;
-									target.addSkill("lvlicaijue_stop");
-								},
-								subSkill: {
-									stop: {
-										trigger: { player: "phaseBegin" },
-										forced: true,
-										content: function() {
-											player.skip("phaseDraw");
-											player.skip("phaseUse");
-											player.removeSkill("lvlicaijue_stop");
-										},
-										sub: true,
-									}
-								}
-							},
-										
-							lilianghuiyao: {
-								trigger: { player: ["damageEnd", "loseHpEnd"] },
-								forced: true,
-								filter: function (event, player) {
-									return !player.storage.lilianghuiyao_used;
-								},
-								content: function() {
-									'step 0'
-									player.judge(function(card) {
-										if (get.color(card) == 'black') {
-											player.maxHp += 2;
-											player.update();
-											game.log(player, '的体力上限增加了2');
-										} else if (get.color(card) == 'red') {
-											player.recover(2);
-											game.log(player, '恢复了2点体力');
-										}
-									});
-									'step 1'
-									if (player.hp % 2 !== 0) {
-										player.recover(1);
-										player.draw();
-										game.log(player, '体力为单数，体力恢复1点并摸一张牌');
-									}
-									player.storage.lilianghuiyao_used = true; // 设置标志，表示本回合已经使用过
-								},
-								group: ['lilianghuiyao_reset'],
-								subSkill: {
-									reset: {
-										trigger: { player: 'phaseBegin' },
-										forced: true,
-										popup: false,
-										content: function() {
-											player.storage.lilianghuiyao_used = false; // 在回合开始时重置标志
-										},
-										sub: true,
-									},
-								},
-								init: function(player) {
-									player.storage.lilianghuiyao_used = false; // 初始化标志
-								},
-							},
-														
-							wujianchaoying: {
-								enable: "phaseUse",
-								usable: 1,
-								filter: function(event, player) {
-									return player.hp % 2 === 0;
-								},
-								content: function() {
-									'step 0'
-									player.chooseBool('是否消耗一半的体力值以在本回合内造成的伤害翻倍并解除杀的使用限制？').ai = function() {
-										// AI 判断是否使用技能的逻辑
-										if (player.hp > 2 && game.hasPlayer(function(current) {
-											return get.attitude(player, current) < 0;
-										})) {
-											return true;
-										}
-										return false;
-									};
-									'step 1'
-									if (result.bool) {
-										player.loseHp(Math.floor(player.hp / 2));
-										player.addTempSkill('wujianchaoying_effect', {player: 'phaseEnd'});
-										game.log(player, '消耗了一半的体力值，使得本回合内造成的伤害翻倍并解除杀的使用限制');
-									}
-								},
-								ai: {
-									order: 8, // 技能的优先级
-									result: {
-										player: function(player) {
-											// AI 判断是否使用技能的逻辑
-											if (player.hp > 2 && game.hasPlayer(function(current) {
-												return get.attitude(player, current) < 0;
-											})) {
-												return 1; // 返回正数表示倾向于使用
-											}
-											return 0; // 返回 0 表示不使用
-										}
-									}
-								},
-								subSkill: {
-									effect: {
-										trigger: {source: "damageBefore"},
-										forced: true,
-										filter: function(event, player) {
-											return event.source === player;
-										},
-										content: function() {
-											trigger.num *= 2;
-										},
-										mod: {
-											cardUsable: function(card, player, num) {
-												if (card.name == 'sha') return Infinity;
-											},
-										},
-										sub: true,
-									},
-								},
-							},
-																								
-							mon3ter: {
-								enable: "phaseUse",
-								usable: 1,
-								filter: function(event, player) {
-									return player.countCards('h', { color: 'black' }) >= 2;
-								},
-								content: function() {
-									'step 0'
-									player.chooseCard('选择2张黑色手牌弃置', 2, { color: 'black' }).set('ai', function(card) {
-										return 6 - get.value(card);
-									});
-									'step 1'
-									if (result.bool) {
-										player.logSkill('kaltsit');
-										player.discard(result.cards);
-										player.chooseTarget('选择一名角色失去1点体力', function(card, player, target) {
-											return target != player;
-										}).set('ai', function(target) {
-											return -get.attitude(player, target);
-										});
-									}
-									'step 2'
-									if (result.bool) {
-										result.targets[0].loseHp(1);
-										player.draw(1);
-										player.changeHujia(1);
-									}
-								},
-								ai: {
-									order: 7, // 技能的优先级
-									result: {
-										player: function(player) {
-											// AI 判断是否使用技能的逻辑
-											if (player.countCards('h', { color: 'black' }) >= 2) {
-												return 1; // 返回正数表示倾向于使用
-											}
-											return 0; // 返回 0 表示不使用
-										},
-										target: function(player, target) {
-											return -1; // AI 选择态度不好的目标
-										}
-									}
-								}
-							},
-							
-							buhui: {
-								enable: "phaseUse",
-								usable: 1,
-								filter: function(event, player) {
-									return player.countCards('h', { color: 'red' }) >= 2;
-								},
-								content: function() {
-									'step 0'
-									player.chooseCard('选择2张红色手牌弃置', 2, { color: 'red' }).set('ai', function(card) {
-										return 6 - get.value(card);
-									});
-									'step 1'
-									if (result.bool) {
-										player.logSkill('buhui');
-										player.discard(result.cards);
-										player.recover();
-										player.draw();
-										player.changeHujia(1);
-									}
-								},
-								ai: {
-									order: 6, // 技能的优先级
-									result: {
-										player: function(player) {
-											// AI 判断是否使用技能的逻辑
-											if (player.countCards('h', { color: 'red' }) >= 2) {
-												return 1; // 返回正数表示倾向于使用
-											}
-											return 0; // 返回 0 表示不使用
-										}
-									}
-								}
-							},
+
 							
 							
 						}
 					};
 					if (lib.device || lib.node) {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("ext:AOLA/" + i + ".jpg");
+							aolaxing.character[i][4].push("ext:AOLA/img/" + i + ".jpg");
 						}
 					}
 					else {
 						for (var i in aolaxing.character) {
-							aolaxing.character[i][4].push("db:extension-AOLA:" + i + ".jpg");
+							aolaxing.character[i][4].push("db:extension-AOLA/img:" + i + ".jpg");
 						}
 					}
 					return aolaxing;
