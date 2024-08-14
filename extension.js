@@ -325,6 +325,21 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								},
 							},
 							
+							liangyipingheng: {
+								trigger: { player: 'phaseEnd' },
+								forced: true,
+								content: function() {
+									var maxHandcards = game.players.reduce((max, p) => Math.max(max, p.countCards('h')), 0);
+									var maxHp = game.players.reduce((max, p) => Math.max(max, p.hp), 0);
+									
+									var handcardsToDraw = maxHandcards - player.countCards('h');
+									var hpToRecover = maxHp - player.hp;
+									
+									if (handcardsToDraw > 0) player.draw(handcardsToDraw);
+									if (hpToRecover > 0) player.recover(hpToRecover);
+								},
+							},
+
 							qian: {
 								audio: "ext:AOLA/audio/skill/qian.mp3",
 								trigger: { 
