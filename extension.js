@@ -11,7 +11,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							AOLA: {
-								AOLA: ["wumianzhiwang", "xihe", "qiankun","shangguxinglong","feier",],
+								AOLA: ["wumianzhiwang", "xihe", "qiankun","shangguxinglong","feier","heiyiwang"],
 								其他: []
 							}
 						},
@@ -24,6 +24,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"feier": ["male", "ao",4, ["xvwutunyan","fenjintianxia"], ["die_audio"]],
 							"tiandaowuji": ["male", "ao",4, ["liangyipingheng","yinyangwushuang"], ["die_audio"]],
 							"tianshiwang": ["male", "ao",4, ["shengtangzhimen","tiantangzhijian","shengjian"], ["die_audio"]],
+							"heiyiwang": ["male", "ao",4, ["morizhidu","yongshengzhihun","heiyeshalu"], ["die_audio"]],
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
@@ -71,12 +72,20 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"tianshiwang": "天使王",
 							shengtangzhimen: "圣堂之门",
 							fengjin: "封禁",
-							"shengtangzhimen_info": "造成伤害后，可以立刻指定一个目标，使其技能失效一回合。",
+							"shengtangzhimen_info": "造成伤害后，立刻使其所有技能失效一回合。",
 							tiantangzhijian: "天堂之剑",
 							"tiantangzhijian_info": "使用杀后获得3个“天堂之剑”标记，初始标记数量为6，上限为9,溢出的标记自动转化为体力回复;",
 							shengjian: "圣剑",
 							"shengjian_info": "出牌阶段，可选择消耗一枚“天堂之剑”标记进行判定一次（限3次），若标记数量大于判定牌点数，则本回合内：使用的杀无次数限制且无视一切必中。",
-							
+
+							"heiyiwang": "黑影王",
+							morizhidu: "末日之都",
+							"morizhidu_info": "每当你受到伤害时，可以选择将此伤害存储到末日之都，当末日之都储伤达到5个时爆发，自身直接失去5点体力。",
+							yongshengzhihun: "永生之魂",
+							"yongshengzhihun_info": "自身每次死亡前可判定一次，若为红色，则体力回复至1点。",
+							heiyeshalu: "黑夜杀戮",
+							"heiyeshalu_info": "每次攻击概率附带末日之都中的伤害，末日之都中存储的伤害越多，概率越高。",
+						
 
 
 						},
@@ -94,6 +103,79 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								}
 							},
 
+							morizhidu: {
+								audio: 'ext:AOLA/audio/skill/morizhidu.mp3',
+								trigger: { player: 'damageBegin' },
+								direct: true,
+								intro: {
+									content: 'mark',
+									name: '末日之都',
+									name2: '伤害',
+								},
+								content() {
+									'step 0'
+									player.chooseControl('存储伤害', '承受伤害').set('prompt', '是否将此次伤害存储到末日之都？');
+									'step 1'
+									if (result.control == '存储伤害') {
+										player.addMark('morizhidu', trigger.num);
+										trigger.untrigger();
+										trigger.finish();
+										player.updateMarks();
+										game.log(player, '将此次伤害存储到末日之都');
+									} else {
+										event.finish();
+									}
+									'step 2'
+									if (player.countMark('morizhidu') >= 5) {
+										player.removeMark('morizhidu', 5);
+										player.loseHp(5);
+										game.log(player, '末日之都爆发，对自身造成了5点伤害');
+									}
+								}
+							},
+
+							yongshengzhihun: {
+								audio: 'ext:AOLA/audio/skill/yongshengzhihun.mp3',
+								trigger: { player: "dying" },
+								skillAnimation: true,
+								animationColor: "thunder",
+								forced: true,
+								content() {
+									'step 0'
+									player.judge(function (card) {
+										return get.color(card) == 'red' ? 1 : -1;
+									});
+									'step 1'
+									if (result.judge > 0) {
+										player.recover(1 - player.hp);
+										game.log(player, '的判定结果为红色，体力回复至1点');
+									}
+								},
+								ai: {
+									threaten: 1.5
+								}
+							},
+							
+							heiyeshalu: {
+								audio: 'ext:AOLA/audio/skill/heiyeshalu.mp3',
+								trigger: { source: 'damageBegin' },
+								forced: true,
+								filter(event, player) {
+									return player.countMark('morizhidu') > 0;
+								},
+								content() {
+									'step 0'
+									player.judge(function(card) {
+										return get.number(card) < (3 + player.countMark('morizhidu')) ? 1 : 0;
+									});
+									'step 1'
+									if (result.judge > 0) {
+										trigger.num += player.countMark('morizhidu');
+										game.log(player, '的判定结果点数小于', (3 + player.countMark('morizhidu')), '，伤害增加了', player.countMark('morizhidu'), '点');
+									}
+								}
+							},
+							
 							shengtangzhimen: {
 								audio: 'ext:AOLA/audio/skill/shengtangzhimen.mp3',
 								trigger: {
