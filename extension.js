@@ -23,13 +23,14 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"shangguxinglong": ["male", "ao",4, ["xingshenzhiyu","yuanhunzhansha"], ["die_audio"]],
 							"feier": ["male", "ao",4, ["xvwutunyan","fenjintianxia"], ["die_audio"]],
 							"tiandaowuji": ["male", "ao",4, ["liangyipingheng","yinyangwushuang"], ["die_audio"]],
+							"tianshiwang": ["male", "ao",4, ["shengtangzhimen","tiantangzhijian","shengjian"], ["die_audio"]],
 						},
 						translate: {
 							"wumianzhiwang": "无冕之王",
 							qian: "潜",
-							"qian_info": "每次受到伤害时，判定一次，若此牌的点数小于10，则免除此次伤害。",
+							"qian_info": "每次受到伤害时，判定一次，若点数小于9，则免除此次伤害。",
 							lvlicaijue: "律理裁决",
-							"lvlicaijue_info": "当你对目标造成伤害后，令目标停止行动一回合。",
+							"lvlicaijue_info": "当你对目标造成伤害后，令目标武将牌翻面。",
 
 							"xihe": "羲和",
 							lishi: "离时",
@@ -67,9 +68,20 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							yinyangwushuang: "阴阳无双",
 							"yinyangwushuang_info": "出牌阶段，可选择消耗1点体力或者1张手牌，令自身获得2回合的伤害+1或者受伤-1效果。",
 
+							"tianshiwang": "天使王",
+							shengtangzhimen: "圣堂之门",
+							fengjin: "封禁",
+							"shengtangzhimen_info": "受到伤害后，可以立刻指定一个目标，使其技能失效，直到目标造成伤害后才恢复。",
+							tiantangzhijian: "天堂之剑",
+							"tiantangzhijian_info": "使用杀后获得3个“天堂之剑”标记，初始标记数量为6，上限为9,溢出的标记自动转化为体力回复;",
+							shengjian: "圣剑",
+							"shengjian_info": "出牌阶段，可选择消耗一枚“天堂之剑”标记进行判定一次（限3次），若标记数量大于判定牌点数，则本回合内：使用的杀无次数限制且无视一切必中。",
+							
+
 
 						},
 						skill: {
+							
 							_dieAudioMOU: {
 								trigger: { global: 'dieBegin', },  // 触发条件为全局事件 'dieBegin'
 								priority: 2,                        // 触发优先级设为2
@@ -82,22 +94,149 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								}
 							},
 
-							liangyipingheng: {
-								audio: "ext:AOLA/audio/skill/liangyipingheng.mp3",
-								trigger: { player: 'phaseEnd' },
+							shengtangzhimen: {
+								audio: 'ext:AOLA/audio/skill/shengtangzhimen.mp3',
+								trigger: {
+									source: 'damageEnd'
+								},
 								forced: true,
-								content: function() {
-									var maxHandcards = game.players.reduce((max, p) => Math.max(max, p.countCards('h')), 0);
-									var maxHp = game.players.reduce((max, p) => Math.max(max, p.hp), 0);
-									
-									var handcardsToDraw = maxHandcards - player.countCards('h');
-									var hpToRecover = maxHp - player.hp;
-									
-									if (handcardsToDraw > 0) player.draw(handcardsToDraw);
-									if (hpToRecover > 0) player.recover(hpToRecover);
+								logTarget: 'player',
+								content() {
+									'step 0'
+									var list = [];
+									var listm = [];
+									var listv = [];
+									if (trigger.player.name1 != undefined) listm = lib.character[trigger.player.name1][3];
+									else listm = lib.character[trigger.player.name][3];
+									if (trigger.player.name2 != undefined) listv = lib.character[trigger.player.name2][3];
+									listm = listm.concat(listv);
+							
+									for (var i = 0; i < listm.length; i++) {
+										var skill = listm[i];
+										var info = get.info(skill);
+										if (info && !info.charlotte) {
+											list.push(skill);
+										}
+									}
+							
+									trigger.player.disableSkill('fengjin', list);
+									trigger.player.addTempSkill('fengjin',{player:'phaseEnd'});
+									game.log(player, '封禁了', trigger.player, '的所有技能');
+								}
+							},
+							
+							fengjin: {
+								onremove(player, skill) {
+									player.enableSkill(skill);
+								},
+								locked: true,
+								mark: true,
+								marktext: '封',
+								charlotte: true,
+								intro: {
+									content(storage, player, skill) {
+										var list = [];
+										for (var i in player.disabledSkills) {
+											if (player.disabledSkills[i].includes(skill)) list.push(i);
+										}
+										if (list.length) {
+											var str = '失效技能：';
+											for (var i = 0; i < list.length; i++) {
+												if (lib.translate[list[i] + '_info']) str += get.translation(list[i]) + '、';
+											}
+											return str.slice(0, str.length - 1);
+										}
+									},
 								},
 							},
-
+							
+							tiantangzhijian: {
+								trigger: { player: 'useCardAfter' },
+								direct: true,
+								filter: function (event, player) {
+									return event.card.name === 'sha';
+								},
+								content: function () {
+									// 获得3个“天堂之剑”标记
+									player.addMark('tiantangzhijian', 3);
+									// 如果标记数量超过上限，则溢出的标记转化为体力回复
+									if (player.countMark('tiantangzhijian') > 9) {
+										player.recover(player.countMark('tiantangzhijian')-9);
+										player.setMark('tiantangzhijian', 9);
+									}
+								},
+								mark: true,
+								marktext: '剑',
+								intro: {
+									content: function (storage, player) {
+										return '当前标记数量：' + player.countMark('tiantangzhijian') + '（上限9）';
+									}
+								},
+								init: function (player) {
+									player.storage.tiantangzhijian = 6;
+									player.syncStorage('tiantangzhijian');
+								}
+							},
+							
+							shengjian: {
+								audio: 'ext:AOLA/audio/skill/tiantangzhijian.mp3',
+								enable: 'phaseUse',
+								usable: 3,
+								filter: function (event, player) {
+									return player.countMark('tiantangzhijian') > 0 
+								},
+								content: function () {
+									'step 0'
+									player.removeMark('tiantangzhijian', 1);
+									player.judge(function (card) {
+										return player.countMark('tiantangzhijian') > get.number(card);
+									});
+									'step 1'
+									if (result.bool) {
+										player.addTempSkill('shengjian_effect', 'phaseEnd');
+										var chat = ['已获得圣剑之力！',].randomGet();
+												player.say(chat);
+									}
+								},
+								subSkill: {
+									effect: {                                        
+										mod: {
+											// 无视距离
+											selectTarget: function (card, player, range) {
+												if (card.name === 'sha') range[1] = Infinity;
+											},
+											// 无限杀
+											cardUsable: function (card, player, num) {
+												if (card.name === 'sha') return Infinity;
+											}
+										},
+										trigger: { player: 'useCardToPlayered' },
+										forced: true,
+										popup: false,
+										filter: function (event, player) {
+											return event.card.name === 'sha';
+										},
+										content: function () {
+											// 无视防具
+											trigger.targets.forEach(target => {
+												target.addTempSkill('qinggang2');
+												target.storage.qinggang2.add(trigger.card);
+											});
+											// 无法响应
+											trigger.directHit.addArray(game.players);
+										},
+									}
+								},
+								ai: {
+									order: 1,
+									result: {
+										player: function (player) {
+											return player.countMark('tiantangzhijian') > 0
+										}
+									}
+								}
+							},
+																	
 							yinyangwushuang: {
 								audio: "ext:AOLA/audio/skill/yinyangwushuang.mp3",
 								enable: 'phaseUse',
@@ -198,18 +337,19 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								content: function() {
 									"step 0"
 									player.judge(function(card) {
-										return get.number(card)< 10; // 判定牌的点数是否小于10
+										return get.number(card)< 9; // 判定牌的点数是否小于9
 									});
 							
 									"step 1"
 									if (result.bool) {
-										trigger.num = 0; // 如果点数小于10，取消此次攻击的伤害
+										trigger.num = 0; // 如果点数小于9，取消此次攻击的伤害
 									}
 								},
 							},
 														
-							lvlicaijue: {									
-								forced: true,							
+							lvlicaijue: {
+								audio: "ext:AOLA/audio/skill/lvlicaijue.mp3",
+								forced: true,
 								trigger: { source: "damageEnd" },
 								filter: function(event, player) {
 									return event.player != player && event.num > 0;
@@ -217,23 +357,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								direct: true,
 								content: function() {
 									var target = trigger.player;
-									target.addSkill("lvlicaijue_stop");
+									target.turnOver();
 								},
-								subSkill: {									
-									stop: {
-										audio:"ext:AOLA/audio/skill/lvlicaijue.mp3",
-										trigger: { player: "phaseBegin" },
-										forced: true,
-										content: function() {
-											player.skip("phaseDraw");
-											player.skip("phaseUse");
-											player.removeSkill("lvlicaijue_stop");
-										},
-										sub: true,
-									}
-								}
 							},
-																					
+																												
 							xvwutunyan: {
 								audio: "ext:AOLA/audio/skill/xvwutunyan.mp3",
 								trigger: { source: 'damageEnd' },
@@ -751,11 +878,11 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 				skill: {},
 				translate: {}
 			},
-			intro: "可联机的AOLA武将扩展包，本来是想做明日方舟武将扩展的，于是有了凯尔希，后来还是觉得AOLA的很多角色机制更有趣一点，于是就改成AOLA了。",
+			intro: "可联机的AOLA武将扩展包。",
 			author: "笑纹光",
 			diskURL: "",
 			forumURL: "",
-			version: "1.0.7",
+			version: "1.0.8",
 		}, files: { "character": [], "card": [], "skill": [] }
 	}
 })
