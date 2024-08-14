@@ -40,7 +40,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 
 							"qiankun": "乾坤",
 							shenhuazhuzai: "神化主宰",
-							"shenhuazhuzai_info": "觉醒技，回合开始时，可选择令自身本回合停止行动，从而进入3回合的神化状态：体力上限翻倍，攻击造成的伤害+1，且等额回复",
+							"shenhuazhuzai_info": "觉醒技，回合开始时，从而进入3回合的神化状态：体力上限翻倍，攻击造成的伤害+1，且等额回复",
 							qiankunzhen: "乾坤震",
 							"qiankunzhen_info": "直接对目标造成一点伤害，出牌阶段限一次。",
 
@@ -71,7 +71,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"tianshiwang": "天使王",
 							shengtangzhimen: "圣堂之门",
 							fengjin: "封禁",
-							"shengtangzhimen_info": "受到伤害后，可以立刻指定一个目标，使其技能失效，直到目标造成伤害后才恢复。",
+							"shengtangzhimen_info": "造成伤害后，可以立刻指定一个目标，使其技能失效一回合。",
 							tiantangzhijian: "天堂之剑",
 							"tiantangzhijian_info": "使用杀后获得3个“天堂之剑”标记，初始标记数量为6，上限为9,溢出的标记自动转化为体力回复;",
 							shengjian: "圣剑",
@@ -700,8 +700,6 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								  player.update();
 								  player.storage.shenhuazhuzai_turns = 0;
 								  player.markSkill('shenhuazhuzai');
-								  player.skip('phaseDraw');
-								  player.skip('phaseUse');
 								},
 								subSkill: {
 								  damageBoost: {
