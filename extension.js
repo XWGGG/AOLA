@@ -11,7 +11,7 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 						connect: true,
 						characterSort: {
 							AOLA: {
-								AOLA: ["wumianzhiwang", "xihe", "qiankun","shangguxinglong","feier","heiyiwang"],
+								AOLA: ["wumianzhiwang", "xihe", "qiankun","shangguxinglong","feier","heiyiwang","Along"],
 								其他: []
 							}
 						},
@@ -25,8 +25,10 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"tiandaowuji": ["male", "ao",4, ["liangyipingheng","yinyangwushuang"], ["die_audio"]],
 							"tianshiwang": ["male", "ao",4, ["shengtangzhimen","tiantangzhijian","shengjian"], ["die_audio"]],
 							"heiyiwang": ["male", "ao",4, ["morizhidu","yongshengzhihun","heiyeshalu"], ["die_audio"]],
+							"Along": ["male", "qun","5/5/0", ["kuangwang","wulv"], ["die_audio"]],
 						},
 						translate: {
+
 							"wumianzhiwang": "无冕之王",
 							qian: "潜",
 							"qian_info": "每次受到伤害时，判定一次，若点数小于9，则免除此次伤害。",
@@ -85,9 +87,13 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 							"yongshengzhihun_info": "自身每次死亡前可判定一次，若为红色，则体力回复至1点。",
 							heiyeshalu: "黑夜杀戮",
 							"heiyeshalu_info": "每次攻击概率附带末日之都中的伤害，末日之都中存储的伤害越多，概率越高。",
+
+							"Along": "阿龙",
+							kuangwang: "狂妄",
+							"kuangwang_info": "回合开始时，可选择本回合内获得一种增益效果：1. 红色手牌视为【杀】且【杀】的使用上限+1;2. 黑色手牌视为【决斗】。",
+							wulv: "无虑",
+							"wulv_info": "回合结束时，手牌+X，X为本回合内造成的伤害总量。若本回合内使用的牌均为红色或黑色，则X+2。",
 						
-
-
 						},
 						skill: {
 							
@@ -100,6 +106,69 @@ game.import("extension", function (lib, game, ui, get, ai, _status) {
 								content: function () {              // 触发时执行的函数
 									if (trigger.player.name)        // 如果触发事件的玩家有名字
 										game.playAudio('..', 'extension', 'AOLA', 'audio', 'death', trigger.player.name); // 更新后的音频路径
+								}
+							},
+
+							wulv: {
+								audio: 'ext:AOLA/audio/skill/wulv.mp3',
+								trigger: { player: "phaseEnd" },
+								forced: true,
+								locked: false,
+								content: function() {
+									var num = 0;
+									// 计算本回合内造成的伤害总量
+									player.getHistory('sourceDamage', function(evt) {
+										num += evt.num;
+									});
+									// 检查本回合内使用的牌是否都是红色或黑色
+									if (player.getHistory('useCard').every(function(evt) {
+										return get.color(evt.card) === 'red' || get.color(evt.card) === 'black';
+									})) {
+										num += 2; // 如果所有使用的牌都是红色或黑色，增加2
+									}
+									player.draw(num); // 根据总伤害数和颜色条件摸牌
+								},
+							},
+
+							kuangwang: {
+								
+								trigger: { player: "phaseBegin" }, // 回合开始时触发
+								direct: true, // 直接触发，无需额外判断条件
+								content: function() {
+									'step 0'
+									player.chooseControl(['红色手牌视为【杀】且【杀】的使用上限+1', '黑色手牌视为【决斗】'])
+										.set('prompt', '请选择本回合内获得的增益效果');
+									'step 1'
+									if (result.control === '红色手牌视为【杀】且【杀】的使用上限+1') {
+										player.addTempSkill('kuangwang_red'); // 添加红色手牌视为【杀】的技能
+									} else if (result.control === '黑色手牌视为【决斗】') {
+										player.addTempSkill('kuangwang_black'); // 添加黑色手牌视为【决斗】的技能
+									}
+								},
+								subSkill: {									
+									red: {
+										audio: 'ext:AOLA/audio/skill/kuangwang.mp3',
+										enable: ['chooseToUse', 'chooseToRespond'],
+										filterCard: function(card) {
+											return get.color(card) === 'red'; // 只选择红色手牌
+										},
+										viewAs: { name: 'sha' }, // 视为【杀】
+										mod: {
+											cardUsable: function(card, player, num) {
+												if (card.name === 'sha') return num + 1; // 【杀】的使用上限+1
+											}
+										},
+										sub: true,
+									},
+									black: {
+										audio: 'ext:AOLA/audio/skill/kuangwang.mp3',
+										enable: ['chooseToUse', 'chooseToRespond'],
+										filterCard: function(card) {
+											return get.color(card) === 'black'; // 只选择黑色手牌
+										},
+										viewAs: { name: 'juedou' }, // 视为【决斗】
+										sub: true,
+									}
 								}
 							},
 
